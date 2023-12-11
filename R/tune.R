@@ -41,6 +41,7 @@ tune_glmnet <- function(
   } else {
     if (verbose) cli::cli_progress_step("Fitting elastic net...")
     alpha_grid <- alpha
+    prefix     <- "enet_"
   }
   if (verbose) on.exit(cli::cli_progress_done())
 
