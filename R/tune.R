@@ -207,7 +207,7 @@ tune_wlasso <- function(
     tune_glmnet(
       data           = data,
       outcome        = outcome,
-      exposures      = exposures[!(exposures %in% c(outcome, weight))],
+      exposures      = exposures[!(exposures %in% outcome)],
       n_folds        = n_folds,
       alpha          = 1,
       penalty_factor = pf,
@@ -219,7 +219,7 @@ tune_wlasso <- function(
     tune_glmnet(
       data           = data,
       outcome        = outcome,
-      exposures      = names(data)[!names(data) %in% c(outcome)],
+      exposures      = exposures[!(exposures %in% outcome)],
       n_folds        = n_folds,
       alpha          = 1,
       penalty_factor = pf,
