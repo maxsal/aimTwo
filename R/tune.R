@@ -138,8 +138,12 @@ tune_ranger <- function(
     data.table::data.table(
       "parameter" = c("rf.mtry", "rf.node_size"),
       "value"     = c(
-        rf |> dplyr::filter(which.min(oob_rmse)) |> dplyr::pull(mtry),
-        rf |> dplyr::filter(which.min(oob_rmse)) |> dplyr::pull(node_size)
+        rf |>
+            dplyr::filter(oob_rmse == min(oob_rmse, na.rm = TRUE)) |>
+            dplyr::pull(mtry),
+        rf |>
+            dplyr::filter(oob_rmse == min(oob_rmse, na.rm = TRUE)) |>
+            dplyr::pull(node_size)
       )
     )
   ), use.names = TRUE, fill = TRUE)
