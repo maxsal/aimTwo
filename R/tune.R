@@ -80,7 +80,7 @@ tune_glmnet <- function(
 #' @importFrom ranger ranger
 #' @importFrom data.table data.table rbindlist as.data.table
 #' @importFrom cli  cli_progress_step cli_alert cli_progress_update cli_progress_done
-#' @importFrom dplyr select
+#' @importFrom dplyr select filter pull
 #' @importFrom tidyselect all_of
 #' @return return a table with hyperparameters and their values
 #' @export
@@ -138,8 +138,8 @@ tune_ranger <- function(
     data.table::data.table(
       "parameter" = c("rf.mtry", "rf.node_size"),
       "value"     = c(
-        rf[which.min(rf$oob_rmse), mtry],
-        rf[which.min(rf$oob_rmse), node_size]
+        rf |> dplyr::filter(which.min(oob_rmse)) |> dplyr::pull(mtry),
+        rf |> dplyr::filter(which.min(oob_rmse)) |> dplyr::pull(node_size)
       )
     )
   ), use.names = TRUE, fill = TRUE)
