@@ -120,7 +120,7 @@ tune_ranger <- function(
   for (i in 1:nrow(rf)) {
     model <- ranger::ranger(
       formula         = f,
-      data            = data[vars],
+      data            = data[, ..vars],
       num.trees       = n_trees,
       mtry            = rf$mtry[i],
       min.node.size   = rf$node_size[i],

@@ -1,1 +1,1 @@
-globalVariables(c("parameter", "formula", "mtry", "node_size"))
+globalVariables(c("parameter", "formula", "mtry", "node_size", "..vars"))
