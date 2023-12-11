@@ -230,6 +230,7 @@ tune_wlasso <- function(
 #' @importFrom dplyr mutate bind_rows
 #' @importFrom data.table copy data.table
 #' @importFrom stats complete.cases
+#' @importFrom cli cli_progress_step cli_process_done
 #' @return return a table with hyperparameters and their values
 #' @export
 tune_models <- function(
@@ -269,6 +270,7 @@ tune_models <- function(
   out <- data.table::data.table()
 
   if ("ridge" %in% methods) {
+    cli::cli_progress_step("Fitting ridge...")
     ridge_mod <- tune_glmnet(
       data      = dataset,
       outcome   = outcome,
@@ -295,6 +297,7 @@ tune_models <- function(
   }
 
   if ("lasso" %in% methods) {
+    cli::cli_progress_step("Fitting lasso...")
     lasso_mod <- tune_glmnet(
       data      = dataset,
       outcome   = outcome,
@@ -317,6 +320,7 @@ tune_models <- function(
   }
 
   if ("enet" %in% methods) {
+    cli::cli_progress_step("Fitting elastic net...")
     if (is.null(alpha)) alpha <- seq(0, 1, length.out = 20)
     enet_mod <- tune_glmnet(
       data      = dataset,
@@ -341,6 +345,7 @@ tune_models <- function(
   }
 
   if ("rf" %in% methods) {
+    cli::cli_progress_step("Fitting random forest...")
     rf_mod <- tune_ranger(
       data          = dataset,
       outcome       = outcome,
@@ -352,6 +357,8 @@ tune_models <- function(
     )
     out <- dplyr::bind_rows(out, rf_mod)
   }
+
+  cli::cli_process_done()
 
   return(out)
 
