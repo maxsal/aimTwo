@@ -16,7 +16,8 @@ tune_models(
   alpha = NULL,
   mtry_seq = NULL,
   node_size_seq = NULL,
-  n_trees = 500
+  n_trees = 500,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ tune_models(
 \item{node_size_seq}{value of min.node.size to try via tune_rf if rf method is selected}
 
 \item{n_trees}{number of trees to grow if rf method is selected}
+
+\item{verbose}{print additional information}
 }
 \value{
 return a table with hyperparameters and their values

@@ -11,6 +11,7 @@ tune_glmnet(
   alpha,
   n_folds = 10,
   family = "binomial",
+  verbose = TRUE,
   ...
 )
 }
@@ -26,6 +27,8 @@ tune_glmnet(
 \item{n_folds}{number of folds for cross-validation}
 
 \item{family}{model family (binomial or guassian)}
+
+\item{verbose}{print additional information}
 
 \item{...}{additional arguments passed to cv.glmnet}
 }

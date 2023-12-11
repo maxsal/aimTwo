@@ -11,7 +11,8 @@ tune_ranger(
   mtry_seq = NULL,
   node_size_seq = NULL,
   n_cores = 1,
-  n_trees = 500
+  n_trees = 500,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ tune_ranger(
 \item{n_cores}{number of cores if parallel}
 
 \item{n_trees}{number of trees to grow}
+
+\item{verbose}{print additional information}
 }
 \value{
 return a table with hyperparameters and their values

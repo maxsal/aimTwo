@@ -5,9 +5,11 @@
 #' @param alpha 0 for lasso, 1 for ridge, or a vector of numeric values to try for elastic net
 #' @param n_folds number of folds for cross-validation
 #' @param family model family (binomial or guassian)
+#' @param verbose print additional information
 #' @param ... additional arguments passed to cv.glmnet
 #' @importFrom glmnet cv.glmnet
 #' @importFrom data.table data.table
+#' @importFrom cli cli_progress_step cli_progress_done
 #' @return return a table with hyperparameters and their values
 #' @export
 tune_glmnet <- function(
@@ -17,8 +19,10 @@ tune_glmnet <- function(
     alpha,
     n_folds = 10,
     family  = "binomial",
+    verbose = TRUE,
     ...
 ) {
+
   x <- as.matrix(data[exposures])
   y <- data[[outcome]]
 
@@ -26,19 +30,19 @@ tune_glmnet <- function(
 
   if (length(alpha) == 1) {
     if (alpha == 1) {
-      print("lasso")
+      if (verbose) cli::cli_progress_step("Fitting lasso...")
       prefix <- "lasso_"
     }
     if (alpha == 0) {
-      print("ridge")
+      if (verbose) cli::cli_progress_step("Fitting ridge...")
       prefix <- "ridge_"
     }
     alpha_grid = alpha
   } else {
-    print("elastic net")
-    prefix <- "enet_"
+    if (verbose) cli::cli_progress_step("Fitting elastic net...")
     alpha_grid <- alpha
   }
+  if (verbose) on.exit(cli::cli_progress_done())
 
   cv_fit_list <- list()
 
@@ -64,7 +68,7 @@ tune_glmnet <- function(
 
   return(data.table::data.table(
     "parameter" = paste0(prefix, c("alpha", "lambda.min", "lambda.1se")),
-    "value" = c(best_alpha, best_lambda, best_lambda_1se)
+    "value"     = c(best_alpha, best_lambda, best_lambda_1se)
   ))
 }
 
@@ -77,6 +81,7 @@ tune_glmnet <- function(
 #' @param node_size_seq values of min.node.size to search over. defaults to 5 values between 3 and nrow(data)/100
 #' @param n_cores number of cores if parallel
 #' @param n_trees number of trees to grow
+#' @param verbose print additional information
 #' @importFrom ranger ranger
 #' @importFrom data.table data.table rbindlist as.data.table
 #' @importFrom cli  cli_progress_step cli_alert cli_progress_update cli_progress_done
@@ -91,9 +96,13 @@ tune_ranger <- function(
     mtry_seq      = NULL,
     node_size_seq = NULL,
     n_cores       = 1,
-    n_trees       = 500
+    n_trees       = 500,
+    verbose       = TRUE
 ) {
-
+  if (verbose) {
+    cli::cli_progress_step("Fitting ranger random forest...")
+    on.exit(cli::cli_progress_done())
+  }
   out <- data.table::data.table()
 
   if (is.null(mtry_seq)) {
@@ -158,8 +167,9 @@ tune_ranger <- function(
 #' @param exposures vector of exposure variable names; if NULL, assumes all non-outcome variables
 #' @param weight name of weight variable
 #' @param n_folds number of folds for cross-validation
+#' @param verbose print additional information
 #' @importFrom wlasso wlasso
-#' @importFrom cli cli_alert_danger
+#' @importFrom cli cli_alert_danger cli_progress_step cli_progress_done
 #' @importFrom dplyr mutate
 #' @importFrom data.table data.table
 #' @return return a table with hyperparameters and their values
@@ -169,8 +179,13 @@ tune_wlasso <- function(
     outcome,
     exposures,
     weight,
-    n_folds = 10
+    n_folds = 10,
+    verbose = TRUE
 ) {
+  if (verbose) {
+    cli::cli_progress_step("Fitting weighted lasso...")
+    on.exit(cli::cli_progress_done())
+  }
   tryCatch({
     wlasso_fit <- wlasso::wlasso(
       data    = as.data.frame(data),
@@ -225,12 +240,13 @@ tune_wlasso <- function(
 #' @param mtry_seq values of mtry to try via tune_rf if rf method is selected
 #' @param node_size_seq value of min.node.size to try via tune_rf if rf method is selected
 #' @param n_trees number of trees to grow if rf method is selected
+#' @param verbose print additional information
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom doParallel registerDoParallel
 #' @importFrom dplyr mutate bind_rows
 #' @importFrom data.table copy data.table
 #' @importFrom stats complete.cases
-#' @importFrom cli cli_progress_step cli_process_done
+#' @importFrom cli cli_progress_step cli_progress_done
 #' @return return a table with hyperparameters and their values
 #' @export
 tune_models <- function(
@@ -245,7 +261,8 @@ tune_models <- function(
     alpha         = NULL,
     mtry_seq      = NULL,
     node_size_seq = NULL,
-    n_trees       = 500
+    n_trees       = 500,
+    verbose       = TRUE
 ) {
 
   if (parallel) {
@@ -270,14 +287,14 @@ tune_models <- function(
   out <- data.table::data.table()
 
   if ("ridge" %in% methods) {
-    cli::cli_progress_step("Fitting ridge...")
     ridge_mod <- tune_glmnet(
       data      = dataset,
       outcome   = outcome,
       exposures = exposures,
       n_folds   = n_folds,
       alpha     = 0,
-      parallel = parallel
+      parallel  = parallel,
+      verbose   = verbose
     )
     out <- dplyr::bind_rows(out, ridge_mod)
     if (!is.null(weight)) {
@@ -289,7 +306,8 @@ tune_models <- function(
         n_folds        = n_folds,
         alpha          = 0,
         penalty_factor = pf,
-        parallel       = parallel
+        parallel       = parallel,
+        verbose        = verbose
       ) |>
         dplyr::mutate(parameter = paste0("w", parameter))
       out <- dplyr::bind_rows(out, wridge_mod)
@@ -297,14 +315,14 @@ tune_models <- function(
   }
 
   if ("lasso" %in% methods) {
-    cli::cli_progress_step("Fitting lasso...")
     lasso_mod <- tune_glmnet(
       data      = dataset,
       outcome   = outcome,
       exposures = exposures,
       n_folds   = n_folds,
       alpha     = 1,
-      parallel  = parallel
+      parallel  = parallel,
+      verbose   = verbose
     )
     out <- dplyr::bind_rows(out, lasso_mod)
     if (!is.null(weight)) {
@@ -313,7 +331,8 @@ tune_models <- function(
         outcome   = outcome,
         exposures = c(exposures, weight),
         weight    = weight,
-        n_folds   = n_folds
+        n_folds   = n_folds,
+        verbose   = verbose
       )
       out <- dplyr::bind_rows(out, wlasso_mod)
     }
@@ -326,8 +345,10 @@ tune_models <- function(
       data      = dataset,
       outcome   = outcome,
       exposures = exposures,
+      n_folds   = n_folds,
       alpha     = alpha,
-      parallel  = parallel
+      parallel  = parallel,
+      verbose   = verbose
     )
     out <- dplyr::bind_rows(out, enet_mod)
     if (!is.null(weight)) {
@@ -338,14 +359,14 @@ tune_models <- function(
         n_folds        = n_folds,
         alpha          = alpha,
         penalty_factor = pf,
-        parallel       = parallel
+        parallel       = parallel,
+        verbose        = verbose
       ) |> dplyr::mutate(parameter = paste0("w", parameter))
       out <- dplyr::bind_rows(out, wenet_mod)
     }
   }
 
   if ("rf" %in% methods) {
-    cli::cli_progress_step("Fitting random forest...")
     rf_mod <- tune_ranger(
       data          = dataset,
       outcome       = outcome,
@@ -353,12 +374,11 @@ tune_models <- function(
       n_cores       = n_cores,
       mtry_seq      = mtry_seq,
       node_size_seq = node_size_seq,
-      n_trees       = n_trees
+      n_trees       = n_trees,
+      verbose       = verbose
     )
     out <- dplyr::bind_rows(out, rf_mod)
   }
-
-  cli::cli_process_done()
 
   return(out)
 
