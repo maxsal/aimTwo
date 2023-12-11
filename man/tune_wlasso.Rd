@@ -4,7 +4,15 @@
 \alias{tune_wlasso}
 \title{Tune lambda parameter for weighted lasso via wlasso::wlasso (then fall back to glmnet if issues)}
 \usage{
-tune_wlasso(data, outcome, exposures, weight, n_folds = 10, verbose = TRUE)
+tune_wlasso(
+  data,
+  outcome,
+  exposures,
+  weight,
+  n_folds = 10,
+  parallel = parallel,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{data}{dataset}
@@ -16,6 +24,8 @@ tune_wlasso(data, outcome, exposures, weight, n_folds = 10, verbose = TRUE)
 \item{weight}{name of weight variable}
 
 \item{n_folds}{number of folds for cross-validation}
+
+\item{parallel}{parallelize?}
 
 \item{verbose}{print additional information}
 }

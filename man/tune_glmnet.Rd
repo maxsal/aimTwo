@@ -9,6 +9,7 @@ tune_glmnet(
   outcome,
   exposures,
   alpha,
+  parallel = TRUE,
   n_folds = 10,
   family = "binomial",
   verbose = TRUE,
@@ -23,6 +24,8 @@ tune_glmnet(
 \item{exposures}{vector of exposure variable names; if NULL, assumes all non-outcome variables}
 
 \item{alpha}{0 for lasso, 1 for ridge, or a vector of numeric values to try for elastic net}
+
+\item{parallel}{parallelize?}
 
 \item{n_folds}{number of folds for cross-validation}
 

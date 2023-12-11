@@ -3,6 +3,7 @@
 #' @param outcome name of outcome variable
 #' @param exposures vector of exposure variable names; if NULL, assumes all non-outcome variables
 #' @param alpha 0 for lasso, 1 for ridge, or a vector of numeric values to try for elastic net
+#' @param parallel parallelize?
 #' @param n_folds number of folds for cross-validation
 #' @param family model family (binomial or guassian)
 #' @param verbose print additional information
@@ -17,6 +18,7 @@ tune_glmnet <- function(
     outcome,
     exposures,
     alpha,
+    parallel = TRUE,
     n_folds = 10,
     family  = "binomial",
     verbose = TRUE,
@@ -50,9 +52,10 @@ tune_glmnet <- function(
   for (alpha in alpha_grid) {
     cv_fit <- glmnet::cv.glmnet(
       x, y,
-      alpha  = alpha,
-      nfolds = n_folds,
-      family = family,
+      alpha    = alpha,
+      nfolds   = n_folds,
+      family   = family,
+      parallel = parallel,
       ...
     )
 
@@ -168,6 +171,7 @@ tune_ranger <- function(
 #' @param exposures vector of exposure variable names; if NULL, assumes all non-outcome variables
 #' @param weight name of weight variable
 #' @param n_folds number of folds for cross-validation
+#' @param parallel parallelize?
 #' @param verbose print additional information
 #' @importFrom wlasso wlasso
 #' @importFrom cli cli_alert_danger cli_progress_step cli_progress_done
@@ -181,6 +185,7 @@ tune_wlasso <- function(
     exposures,
     weight,
     n_folds = 10,
+    parallel = parallel,
     verbose = TRUE
 ) {
   if (verbose) {
@@ -211,7 +216,7 @@ tune_wlasso <- function(
       n_folds        = n_folds,
       alpha          = 1,
       penalty_factor = pf,
-      parallel       = FALSE
+      parallel       = parallel
     ) |> dplyr::mutate(parameter = paste0("w", parameter))
   }, warning = function(wrn_msg) {
     cli::cli_alert_danger("issue with wlasso, switching to glmnet: {wrn_msg}")
@@ -223,7 +228,7 @@ tune_wlasso <- function(
       n_folds        = n_folds,
       alpha          = 1,
       penalty_factor = pf,
-      parallel       = FALSE
+      parallel       = parallel
     ) |> dplyr::mutate(parameter = paste0("w", parameter))
   })
 }

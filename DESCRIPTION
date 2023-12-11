@@ -14,7 +14,10 @@ Imports:
   wlasso,
   cli,
   doParallel,
-  tidyselect
+  tidyselect,
+  ggplot2,
+  ms,
+  stringr
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
