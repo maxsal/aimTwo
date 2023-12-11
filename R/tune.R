@@ -339,7 +339,6 @@ tune_models <- function(
   }
 
   if ("enet" %in% methods) {
-    cli::cli_progress_step("Fitting elastic net...")
     if (is.null(alpha)) alpha <- seq(0, 1, length.out = 20)
     enet_mod <- tune_glmnet(
       data      = dataset,
