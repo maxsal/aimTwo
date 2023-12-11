@@ -80,6 +80,8 @@ tune_glmnet <- function(
 #' @importFrom ranger ranger
 #' @importFrom data.table data.table rbindlist as.data.table
 #' @importFrom cli  cli_progress_step cli_alert cli_progress_update cli_progress_done
+#' @importFrom dplyr select
+#' @importFrom tidyselect all_of
 #' @return return a table with hyperparameters and their values
 #' @export
 tune_ranger <- function(
@@ -120,7 +122,7 @@ tune_ranger <- function(
   for (i in 1:nrow(rf)) {
     model <- ranger::ranger(
       formula         = f,
-      data            = data[, ..vars],
+      data            = data |> dplyr::select(tidyselect::all_of(vars)),
       num.trees       = n_trees,
       mtry            = rf$mtry[i],
       min.node.size   = rf$node_size[i],
