@@ -175,7 +175,7 @@ tune_wlasso <- function(
     wlasso_fit <- wlasso::wlasso(
       data    = as.data.frame(data),
       col.y   = outcome,
-      col.x   = names(data)[!(names(data) %in% c(outcome, weight))],
+      col.x   = exposures[!(exposures %in% c(outcome, weight))],
       family  = "binomial",
       weights = weight,
       method  = "dCV", k = n_folds
@@ -191,7 +191,7 @@ tune_wlasso <- function(
     tune_glmnet(
       data           = data,
       outcome        = outcome,
-      exposures      = names(data)[!names(data) %in% c(outcome)],
+      exposures      = exposures[!(exposures %in% c(outcome, weight))],
       n_folds        = n_folds,
       alpha          = 1,
       penalty_factor = pf,
@@ -283,12 +283,13 @@ tune_models <- function(
       wridge_mod <- tune_glmnet(
         data           = wdataset,
         outcome        = outcome,
-        exposures      = exposures,
+        exposures      = c(exposures, weight),
         n_folds        = n_folds,
         alpha          = 0,
         penalty_factor = pf,
-        parallel = parallel
-      ) |> dplyr::mutate(parameter = paste0("w", parameter))
+        parallel       = parallel
+      ) |>
+        dplyr::mutate(parameter = paste0("w", parameter))
       out <- dplyr::bind_rows(out, wridge_mod)
     }
   }
@@ -307,7 +308,7 @@ tune_models <- function(
       wlasso_mod <- tune_wlasso(
         data      = wdataset,
         outcome   = outcome,
-        exposures = exposures,
+        exposures = c(exposures, weight),
         weight    = weight,
         n_folds   = n_folds
       )
