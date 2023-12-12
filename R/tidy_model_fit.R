@@ -69,7 +69,6 @@ plot_glmnet_vip <- function(x, exposure_var = label, beta_var = rel_beta, top_n 
 #' @return List of objects: glmnet object, data table of betas, ggplot2 object
 #' @importFrom dplyr select pull filter
 #' @importFrom glmnet glmnet
-#' @importFrom ms standardize_variables
 #' @importFrom data.table copy
 #' @export
 tidy_glmnet <- function(
@@ -227,4 +226,95 @@ tidy_ranger <- function(
         vip_plot  = vip_plot
     ))
 
+}
+
+
+
+#' Fit a weighted lasso model and extract variable importance (betas) and plot
+#' @param data A data frame
+#' @param exposures A character vector of exposure variables
+#' @param outcome A character vector of outcome variables
+#' @param weight_var Name of the weight variable
+#' @param lambda A numeric value for the lambda parameter
+#' @param family A character value for the glmnet family argument
+#' @param ... Additional arguments to pass to glmnet
+#' @return List of objects: glmnet object, data table of betas, ggplot2 object
+#' @importFrom dplyr select pull filter
+#' @importFrom glmnet glmnet
+#' @importFrom data.table copy
+#' @importFrom cli cli_alert_danger
+#' @export
+tidy_wlasso <- function(
+    data,
+    exposures,
+    outcome,
+    weight_var = NULL,
+    lambda     = NULL,
+    family     = "binomial",
+    ...
+) {
+    cols <- c(exposures, outcome, weight_var)
+    dataset <- data.table::copy(data)
+    dataset <- dataset |>
+        (\(x) {
+            if (!is.null(weight_var)) {
+                x |> dplyr::filter(!is.na(get(weight_var)))
+            } else {
+                x
+            }
+        })()
+
+    model_fit <- tryCatch({
+        weighted_lasso(
+            data        = dataset,
+            col.x       = exposures,
+            col.y       = outcome,
+            weights     = weight_var,
+            method      = "dCV",
+            lambda.grid = lambda,
+            family      = family
+        )[["model.min"]]
+    },
+    error = function(e) {
+        cli::cli_alert_danger("Likely convergence issue in wlasso - falling back to glmnet. Error: ", e$message)
+        weight <- dataset |>
+            dplyr::pull(get(weight_var))
+        glmnet::glmnet(
+            x = dataset |>
+                dplyr::select(tidyselect::any_of(exposures)) |>
+                as.matrix(),
+            y = dataset |> dplyr::pull(outcome),
+            weights = weight,
+            alpha = 1,
+            family = family,
+            lambda = lambda,
+            ...
+        )
+    },
+    warning = function(w) {
+        cli::cli_alert_danger("Likely convergence issue in wlasso - falling back to glmnet. Warning: ", w$message)
+        weight <- dataset |>
+            dplyr::pull(get(weight_var))
+        glmnet::glmnet(
+            x = dataset |>
+                dplyr::select(tidyselect::any_of(exposures)) |>
+                as.matrix(),
+            y = dataset |> dplyr::pull(outcome),
+            weights = weight,
+            alpha = 1,
+            family = family,
+            lambda = lambda,
+            ...
+        )
+    })
+
+    model_betas <- tidy_glmnet_betas(model_fit, ...)
+
+    vip_plot <- plot_glmnet_vip(model_betas, exposure_var = label, beta_var = rel_beta)
+
+    return(list(
+        model_fit   = model_fit,
+        model_betas = model_betas,
+        vip_plot    = vip_plot
+    ))
 }
