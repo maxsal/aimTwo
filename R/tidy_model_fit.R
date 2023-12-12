@@ -92,8 +92,8 @@ tidy_glmnet <- function(
         })()
     no_outcome <- dataset |> dplyr::select(-dplyr::all_of(outcome))
     if (!is.null(weight_var)) {
-        weight <- no_outcome |>
-            dplyr::pull(get(weight_var))
+        # weight <- no_outcome |>
+        #     dplyr::pull(get(weight_var))
         pf <- as.numeric(names(no_outcome)[names(no_outcome) != weight_var])
     } else {
         weight <- NULL
@@ -104,7 +104,6 @@ tidy_glmnet <- function(
             dplyr::select(tidyselect::any_of(c(exposures, weight_var))) |>
             as.matrix(),
         y              = dataset |> dplyr::pull(outcome),
-        weights        = weight,
         alpha          = alpha,
         family         = family,
         lambda         = lambda,
@@ -281,8 +280,6 @@ tidy_wlasso <- function(
     },
     error = function(e) {
         cli::cli_alert_danger("Likely convergence issue in wlasso - falling back to glmnet. Error: ", e$message)
-        weight <- dataset |>
-            dplyr::pull(get(weight_var))
         tmp_dataset <- dataset |>
             dplyr::select(tidyselect::any_of(c(exposures, weight_var)))
         pf <- as.numeric(names(tmp_dataset)[names(tmp_dataset) != weight_var])
@@ -290,7 +287,6 @@ tidy_wlasso <- function(
             x = tmp_dataset |>
                 as.matrix(),
             y = dataset |> dplyr::pull(outcome),
-            weights = weight,
             alpha = 1,
             family = family,
             lambda = lambda,
@@ -300,8 +296,6 @@ tidy_wlasso <- function(
     },
     warning = function(w) {
         cli::cli_alert_danger("Likely convergence issue in wlasso - falling back to glmnet. Warning: ", w$message)
-        weight <- dataset |>
-            dplyr::pull(get(weight_var))
         tmp_dataset <- dataset |>
             dplyr::select(tidyselect::any_of(c(exposures, weight_var)))
         pf <- as.numeric(names(tmp_dataset)[names(tmp_dataset) != weight_var])
@@ -309,7 +303,6 @@ tidy_wlasso <- function(
             x = tmp_dataset |>
                 as.matrix(),
             y = dataset |> dplyr::pull(outcome),
-            weights = weight,
             alpha = 1,
             family = family,
             lambda = lambda,
