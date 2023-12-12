@@ -90,16 +90,17 @@ tidy_glmnet <- function(
                 x
             }
         })()
+    no_outcome <- dataset |> dplyr::select(-dplyr::all_of(outcome))
     if (!is.null(weight_var)) {
-        weight <- dataset |>
+        weight <- no_outcome |>
             dplyr::pull(get(weight_var))
-        pf <- as.numeric(names(dataset)[names(dataset) != weight_var])
+        pf <- as.numeric(names(no_outcome)[names(no_outcome) != weight_var])
     } else {
         weight <- NULL
         pf <- rep(1, length(exposures))
     }
     model_fit <- glmnet::glmnet(
-        x = dataset |>
+        x = no_outcome |>
             dplyr::select(tidyselect::any_of(c(exposures, weight_var))) |>
             as.matrix(),
         y              = dataset |> dplyr::pull(outcome),
