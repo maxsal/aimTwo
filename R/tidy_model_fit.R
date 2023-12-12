@@ -100,7 +100,7 @@ tidy_glmnet <- function(
     }
     model_fit <- glmnet::glmnet(
         x = dataset |>
-            dplyr::select(tidyselect::any_of(exposures, weight_var)) |>
+            dplyr::select(tidyselect::any_of(c(exposures, weight_var))) |>
             as.matrix(),
         y              = dataset |> dplyr::pull(outcome),
         weights        = weight,
