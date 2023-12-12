@@ -68,6 +68,7 @@ plot_glmnet_vip <- function(x, exposure_var = label, beta_var = rel_beta, top_n 
 #' @param ... Additional arguments to pass to glmnet
 #' @return List of objects: glmnet object, data table of betas, ggplot2 object
 #' @importFrom dplyr select pull filter
+#' @importFrom tidyselect any_of
 #' @importFrom glmnet glmnet
 #' @importFrom data.table copy
 #' @export
@@ -81,7 +82,8 @@ tidy_glmnet <- function(
     family = "binomial",
     ...
 ) {
-    dataset <- data.table::copy(data)
+    dataset <- data.table::copy(data) |>
+        dplyr::select(tidyselect::any_of(c(exposures, outcome, weight_var)))
     dataset <- dataset |>
         (\(x) {
             if (!is.null(weight_var)) {
@@ -90,11 +92,9 @@ tidy_glmnet <- function(
                 x
             }
         })()
-    no_outcome <- dataset |> dplyr::select(-dplyr::all_of(outcome))
+    no_outcome <- dataset |> dplyr::select(-dplyr::any_of(outcome))
     if (!is.null(weight_var)) {
-        # weight <- no_outcome |>
-        #     dplyr::pull(get(weight_var))
-        pf <- as.numeric(names(no_outcome)[names(no_outcome) != weight_var])
+        pf <- as.numeric(names(no_outcome) != weight_var)
     } else {
         weight <- NULL
         pf <- rep(1, length(exposures))
@@ -257,7 +257,8 @@ tidy_wlasso <- function(
     ...
 ) {
     cols <- c(exposures, outcome, weight_var)
-    dataset <- data.table::copy(data)
+    dataset <- data.table::copy(data) |>
+        dplyr::select(tidyselect::any_of(cols))
     dataset <- dataset |>
         (\(x) {
             if (!is.null(weight_var)) {
@@ -282,7 +283,7 @@ tidy_wlasso <- function(
         cli::cli_alert_danger("Likely convergence issue in wlasso - falling back to glmnet. Error: ", e$message)
         tmp_dataset <- dataset |>
             dplyr::select(tidyselect::any_of(c(exposures, weight_var)))
-        pf <- as.numeric(names(tmp_dataset)[names(tmp_dataset) != weight_var])
+        pf <- as.numeric(names(tmp_dataset) != weight_var)
         glmnet::glmnet(
             x = tmp_dataset |>
                 as.matrix(),
@@ -298,7 +299,7 @@ tidy_wlasso <- function(
         cli::cli_alert_danger("Likely convergence issue in wlasso - falling back to glmnet. Warning: ", w$message)
         tmp_dataset <- dataset |>
             dplyr::select(tidyselect::any_of(c(exposures, weight_var)))
-        pf <- as.numeric(names(tmp_dataset)[names(tmp_dataset) != weight_var])
+        pf <- as.numeric(names(tmp_dataset) != weight_var)
         glmnet::glmnet(
             x = tmp_dataset |>
                 as.matrix(),
