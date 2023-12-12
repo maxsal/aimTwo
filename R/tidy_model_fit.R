@@ -3,7 +3,7 @@
 #' @param phecode_description A logical indicating whether to include the phecode description
 #' @return A data table with the exposure and beta
 #' @importFrom data.table data.table
-#' @importFrom dplyr filter mutate arrange desc left_join n
+#' @importFrom dplyr filter mutate arrange desc left_join n select
 #' @importFrom stringr str_wrap
 #' @importFrom ms pheinfox
 #' @importFrom stats coef
@@ -24,7 +24,7 @@ tidy_glmnet_betas <- function(x, phecode_description = TRUE) {
     (\(x) if (phecode_description) {
         x |>
             dplyr::left_join(
-                ms::pheinfox[, list(exposure = phecode, description)],
+                ms::pheinfox |> dplyr::select(exposure = phecode, description),
                 by = "exposure"
             ) |>
             dplyr::mutate(
@@ -105,7 +105,7 @@ tidy_glmnet <- function(
 #' @param phecode_description A logical indicating whether to include the phecode description
 #' @return A data table with the exposure and importance
 #' @importFrom data.table data.table
-#' @importFrom dplyr mutate arrange desc left_join n
+#' @importFrom dplyr mutate arrange desc left_join n select
 #' @importFrom stringr str_wrap
 #' @importFrom ms pheinfox
 #' @export
@@ -124,7 +124,7 @@ tidy_ranger_imp <- function(x, phecode_description = TRUE) {
         (\(x) if (phecode_description) {
             x |>
                 dplyr::left_join(
-                    ms::pheinfox[, list(exposure = phecode, description)],
+                    ms::pheinfox |> dplyr::select(exposure = phecode, description),
                     by = "exposure"
                 ) |>
                 dplyr::mutate(
