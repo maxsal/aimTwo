@@ -61,6 +61,7 @@ plot_glmnet_vip <- function(x, exposure_var = label, beta_var = rel_beta, top_n 
 #' @param data A data frame
 #' @param exposures A character vector of exposure variables
 #' @param outcome A character vector of outcome variables
+#' @param weight_var Name of the weight variable
 #' @param lambda A numeric value for the lambda parameter
 #' @param alpha A numeric value for the alpha parameter
 #' @param family A character value for the glmnet family argument
@@ -98,7 +99,7 @@ tidy_glmnet <- function(
     }
     model_fit <- glmnet::glmnet(
         x = dataset |>
-            dplyr::select(tidyselect::any_of(exposures) |>
+            dplyr::select(tidyselect::any_of(exposures)) |>
             as.matrix(),
         y            = dataset |> dplyr::pull(outcome),
         weights      = weight,

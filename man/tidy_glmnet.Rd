@@ -4,12 +4,23 @@
 \alias{tidy_glmnet}
 \title{Fit a glmnet model and extract variable importance (betas) and plot}
 \usage{
-tidy_glmnet(data, exposures, outcome, lambda, alpha, family = "binomial", ...)
+tidy_glmnet(
+  data,
+  exposures,
+  weight_var = NULL,
+  outcome,
+  lambda,
+  alpha,
+  family = "binomial",
+  ...
+)
 }
 \arguments{
 \item{data}{A data frame}
 
 \item{exposures}{A character vector of exposure variables}
+
+\item{weight_var}{Name of the weight variable}
 
 \item{outcome}{A character vector of outcome variables}
 
