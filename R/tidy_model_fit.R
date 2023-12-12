@@ -24,7 +24,7 @@ tidy_glmnet_betas <- function(x, phecode_description = TRUE) {
     (\(x) if (phecode_description) {
         x |>
             dplyr::left_join(
-                ms::pheinfox[, .(exposure = phecode, description)],
+                ms::pheinfox[, list(exposure = phecode, description)],
                 by = "exposure"
             ) |>
             dplyr::mutate(
@@ -124,7 +124,7 @@ tidy_ranger_imp <- function(x, phecode_description = TRUE) {
         (\(x) if (phecode_description) {
             x |>
                 dplyr::left_join(
-                    ms::pheinfox[, .(exposure = phecode, description)],
+                    ms::pheinfox[, list(exposure = phecode, description)],
                     by = "exposure"
                 ) |>
                 dplyr::mutate(
