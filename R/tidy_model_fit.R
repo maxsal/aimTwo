@@ -68,6 +68,8 @@ plot_glmnet_vip <- function(x, exposure_var = label, beta_var = rel_beta, top_n 
 #' @return List of objects: glmnet object, data table of betas, ggplot2 object
 #' @importFrom dplyr select pull filter
 #' @importFrom glmnet glmnet
+#' @importFrom ms standardize_variables
+#' @importFrom data.table copy
 #' @export
 tidy_glmnet <- function(
     data,
@@ -89,22 +91,20 @@ tidy_glmnet <- function(
             }
         })()
     if (!is.null(weight_var)) {
-        weight <- dataset |> dplyr::pull(get(weight_var))
+        weight <- dataset |>
+            dplyr::pull(get(weight_var))
     } else {
         weight <- NULL
     }
     model_fit <- glmnet::glmnet(
         x = dataset |>
-            dplyr::select(tidyselect::any_of(c(exposures, weight_var))) |>
-            ms::standardize_variables(all_numeric = TRUE) |>
+            dplyr::select(tidyselect::any_of(exposures) |>
             as.matrix(),
         y            = dataset |> dplyr::pull(outcome),
         weights      = weight,
         alpha        = alpha,
         family       = family,
         lambda       = lambda,
-        exposure_var = label,
-        beta_var     = rel_beta,
         ...
     )
 
