@@ -93,18 +93,21 @@ tidy_glmnet <- function(
     if (!is.null(weight_var)) {
         weight <- dataset |>
             dplyr::pull(get(weight_var))
+        pf <- as.numeric(names(dataset)[names(dataset) != weight_var])
     } else {
         weight <- NULL
+        pf <- rep(1, length(exposures))
     }
     model_fit <- glmnet::glmnet(
         x = dataset |>
-            dplyr::select(tidyselect::any_of(exposures)) |>
+            dplyr::select(tidyselect::any_of(exposures, weight_var)) |>
             as.matrix(),
-        y            = dataset |> dplyr::pull(outcome),
-        weights      = weight,
-        alpha        = alpha,
-        family       = family,
-        lambda       = lambda,
+        y              = dataset |> dplyr::pull(outcome),
+        weights        = weight,
+        alpha          = alpha,
+        family         = family,
+        lambda         = lambda,
+        penalty.factor = pf,
         ...
     )
 
@@ -279,15 +282,18 @@ tidy_wlasso <- function(
         cli::cli_alert_danger("Likely convergence issue in wlasso - falling back to glmnet. Error: ", e$message)
         weight <- dataset |>
             dplyr::pull(get(weight_var))
+        tmp_dataset <- dataset |>
+            dplyr::select(tidyselect::any_of(c(exposures, weight_var)))
+        pf <- as.numeric(names(tmp_dataset)[names(tmp_dataset) != weight_var])
         glmnet::glmnet(
-            x = dataset |>
-                dplyr::select(tidyselect::any_of(exposures)) |>
+            x = tmp_dataset |>
                 as.matrix(),
             y = dataset |> dplyr::pull(outcome),
             weights = weight,
             alpha = 1,
             family = family,
             lambda = lambda,
+            penalty.factor = pf,
             ...
         )
     },
@@ -295,15 +301,18 @@ tidy_wlasso <- function(
         cli::cli_alert_danger("Likely convergence issue in wlasso - falling back to glmnet. Warning: ", w$message)
         weight <- dataset |>
             dplyr::pull(get(weight_var))
+        tmp_dataset <- dataset |>
+            dplyr::select(tidyselect::any_of(c(exposures, weight_var)))
+        pf <- as.numeric(names(tmp_dataset)[names(tmp_dataset) != weight_var])
         glmnet::glmnet(
-            x = dataset |>
-                dplyr::select(tidyselect::any_of(exposures)) |>
+            x = tmp_dataset |>
                 as.matrix(),
             y = dataset |> dplyr::pull(outcome),
             weights = weight,
             alpha = 1,
             family = family,
             lambda = lambda,
+            penalty.factor = pf,
             ...
         )
     })
