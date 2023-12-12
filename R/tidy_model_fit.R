@@ -66,21 +66,40 @@ plot_glmnet_vip <- function(x, exposure_var = label, beta_var = rel_beta, top_n 
 #' @param family A character value for the glmnet family argument
 #' @param ... Additional arguments to pass to glmnet
 #' @return List of objects: glmnet object, data table of betas, ggplot2 object
-#' @importFrom dplyr select pull
+#' @importFrom dplyr select pull filter
 #' @importFrom glmnet glmnet
 #' @export
 tidy_glmnet <- function(
     data,
     exposures,
+    weight_var = NULL,
     outcome,
     lambda,
     alpha,
     family = "binomial",
     ...
 ) {
+    dataset <- data.table::copy(data)
+    dataset <- dataset |>
+        (\(x) {
+            if (!is.null(weight_var)) {
+                x |> dplyr::filter(!is.na(get(weight_var)))
+            } else {
+                x
+            }
+        })()
+    if (!is.null(weight_var)) {
+        weight <- dataset |> dplyr::pull(get(weight_var))
+    } else {
+        weight <- NULL
+    }
     model_fit <- glmnet::glmnet(
-        x            = as.matrix(ms::standardize_variables(data |> dplyr::select(tidyselect::any_of(exposures)), all_numeric = TRUE)),
-        y            = data |> dplyr::pull(outcome),
+        x = dataset |>
+            dplyr::select(tidyselect::any_of(c(exposures, weight_var))) |>
+            ms::standardize_variables(all_numeric = TRUE) |>
+            as.matrix(),
+        y            = dataset |> dplyr::pull(outcome),
+        weights      = weight,
         alpha        = alpha,
         family       = family,
         lambda       = lambda,
