@@ -74,7 +74,7 @@ wglmnet_alpha <- function(
   }
 
   future::plan(plan_strategy, workers = workers)
-  alpha_grid |>
+  alphas <- alpha_grid |>
     furrr::future_map(
       \(x) {
         wglmnet(
@@ -102,4 +102,6 @@ wglmnet_alpha <- function(
       },
       .progress = TRUE
     )
+
+    alphas[[which.min(sapply(alphas, \(x) x[["error_min"]]))]]
 }
