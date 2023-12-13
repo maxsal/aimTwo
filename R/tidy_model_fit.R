@@ -247,78 +247,78 @@ tidy_ranger <- function(
 #' @importFrom data.table copy
 #' @importFrom cli cli_alert_danger
 #' @export
-tidy_wlasso <- function(
-    data,
-    exposures,
-    outcome,
-    weight_var = NULL,
-    lambda     = NULL,
-    family     = "binomial",
-    ...
-) {
-    cols <- c(exposures, outcome, weight_var)
-    dataset <- data.table::copy(data) |>
-        dplyr::select(tidyselect::any_of(cols))
-    dataset <- dataset |>
-        (\(x) {
-            if (!is.null(weight_var)) {
-                x |> dplyr::filter(!is.na(get(weight_var)))
-            } else {
-                x
-            }
-        })()
+# tidy_wlasso <- function(
+#     data,
+#     exposures,
+#     outcome,
+#     weight_var = NULL,
+#     lambda     = NULL,
+#     family     = "binomial",
+#     ...
+# ) {
+#     cols <- c(exposures, outcome, weight_var)
+#     dataset <- data.table::copy(data) |>
+#         dplyr::select(tidyselect::any_of(cols))
+#     dataset <- dataset |>
+#         (\(x) {
+#             if (!is.null(weight_var)) {
+#                 x |> dplyr::filter(!is.na(get(weight_var)))
+#             } else {
+#                 x
+#             }
+#         })()
 
-    model_fit <- tryCatch({
-        weighted_lasso(
-            data        = dataset,
-            col.x       = exposures,
-            col.y       = outcome,
-            weights     = weight_var,
-            method      = "dCV",
-            lambda.grid = lambda,
-            family      = family
-        )[["model.min"]]
-    },
-    error = function(e) {
-        cli::cli_alert_danger("Likely convergence issue in wlasso - falling back to glmnet. Error: ", e$message)
-        tmp_dataset <- dataset |>
-            dplyr::select(tidyselect::any_of(c(exposures, weight_var)))
-        pf <- as.numeric(names(tmp_dataset) != weight_var)
-        glmnet::glmnet(
-            x = tmp_dataset |>
-                as.matrix(),
-            y = dataset |> dplyr::pull(outcome),
-            alpha = 1,
-            family = family,
-            lambda = lambda,
-            penalty.factor = pf,
-            ...
-        )
-    },
-    warning = function(w) {
-        cli::cli_alert_danger("Likely convergence issue in wlasso - falling back to glmnet. Warning: ", w$message)
-        tmp_dataset <- dataset |>
-            dplyr::select(tidyselect::any_of(c(exposures, weight_var)))
-        pf <- as.numeric(names(tmp_dataset) != weight_var)
-        glmnet::glmnet(
-            x = tmp_dataset |>
-                as.matrix(),
-            y = dataset |> dplyr::pull(outcome),
-            alpha = 1,
-            family = family,
-            lambda = lambda,
-            penalty.factor = pf,
-            ...
-        )
-    })
+#     model_fit <- tryCatch({
+#         weighted_lasso(
+#             data        = dataset,
+#             col.x       = exposures,
+#             col.y       = outcome,
+#             weights     = weight_var,
+#             method      = "dCV",
+#             lambda.grid = lambda,
+#             family      = family
+#         )[["model.min"]]
+#     },
+#     error = function(e) {
+#         cli::cli_alert_danger("Likely convergence issue in wlasso - falling back to glmnet. Error: ", e$message)
+#         tmp_dataset <- dataset |>
+#             dplyr::select(tidyselect::any_of(c(exposures, weight_var)))
+#         pf <- as.numeric(names(tmp_dataset) != weight_var)
+#         glmnet::glmnet(
+#             x = tmp_dataset |>
+#                 as.matrix(),
+#             y = dataset |> dplyr::pull(outcome),
+#             alpha = 1,
+#             family = family,
+#             lambda = lambda,
+#             penalty.factor = pf,
+#             ...
+#         )
+#     },
+#     warning = function(w) {
+#         cli::cli_alert_danger("Likely convergence issue in wlasso - falling back to glmnet. Warning: ", w$message)
+#         tmp_dataset <- dataset |>
+#             dplyr::select(tidyselect::any_of(c(exposures, weight_var)))
+#         pf <- as.numeric(names(tmp_dataset) != weight_var)
+#         glmnet::glmnet(
+#             x = tmp_dataset |>
+#                 as.matrix(),
+#             y = dataset |> dplyr::pull(outcome),
+#             alpha = 1,
+#             family = family,
+#             lambda = lambda,
+#             penalty.factor = pf,
+#             ...
+#         )
+#     })
 
-    model_betas <- tidy_glmnet_betas(model_fit, ...)
+#     model_betas <- tidy_glmnet_betas(model_fit, ...)
 
-    vip_plot <- plot_glmnet_vip(model_betas, exposure_var = label, beta_var = rel_beta)
+#     vip_plot <- plot_glmnet_vip(model_betas, exposure_var = label, beta_var = rel_beta)
 
-    return(list(
-        model_fit   = model_fit,
-        model_betas = model_betas,
-        vip_plot    = vip_plot
-    ))
-}
+#     return(list(
+#         model_fit   = model_fit,
+#         model_betas = model_betas,
+#         vip_plot    = vip_plot
+#     ))
+# }

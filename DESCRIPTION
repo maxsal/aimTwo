@@ -18,7 +18,8 @@ Imports:
   ggplot2,
   ms,
   stringr,
-  stats
+  stats,
+  survey
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
