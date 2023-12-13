@@ -68,7 +68,6 @@ error_f <- function(
 
   for (r in 1:R) {
     for (kk in 1:k) {
-      print(paste0("r = ", r, ", k = ", kk))
       # Define the names of the weights' columns
       if (method %in% c("JKn", "dCV", "BRR", "bootstrap", "subbootstrap")) {
         yhat_name <- paste0("yhat_rw_r_", r, "_train_", kk)
@@ -90,7 +89,6 @@ error_f <- function(
       # Calculate the error
       if (!cv_error_ind) {
         sumwi_k                                    <- sum(data[, weights_name])
-        print(length(apply(l_loss_w[[yhat_name]], 2, sum) / sumwi_k))
         error_lambda_r[(r-1)*k + kk,]              <- apply(l_loss_w[[yhat_name]], 2, sum) / sumwi_k
         rownames(error_lambda_r)[(r - 1) * k + kk] <- paste0(method, "_r_", r, "_k_", kk)
       }
