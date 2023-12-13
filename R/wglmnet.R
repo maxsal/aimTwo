@@ -20,6 +20,8 @@
 #' @param k number of folds to be defined (only for \code{cv}). Default is \code{k=10}.
 #' @param R number of times the sample is partioned (needed and used only for \code{cv}, \code{split} or \code{extrapolation} methods). Default R=1.
 #' @param B number of bootstrap resamples (only for \code{bootstrap} and \code{subbootstrap} methods). Default \code{B=200}.
+#' @param maxit maximum number of iterations allowed. Default \code{maxit=1E5}.
+#' @param thresh convergence threshold for coordinate descent. Default \code{thresh=1E-7}.
 #' @param cv_error_ind method for estimating the error for \code{cv} method. FALSE (default) estimates the error for each test set and defines the cross-validated error as the average of all those errors. Option TRUE estimates the cross-validated error as the weighted average of the loss for each unit
 #' @param train_prob probability for defining training sets (only for \code{split} and \code{extrapolation} methods)
 #' @param method_split \code{cv} or \code{bootstrap} (only for \code{split} method)
@@ -46,6 +48,8 @@ wglmnet <- function(
   k            = 10,
   R            = 1,
   B            = 200,
+  maxit        = 1E5,
+  thresh       = 1E-7,
   cv_error_ind = FALSE,
   train_prob   = 0.7,
   method_split = c("dCV", "bootstrap", "subbootstrap"),
@@ -78,7 +82,9 @@ wglmnet <- function(
       x       = as.matrix(new_data[, predictors]),
       weights = as.numeric(new_data[, weights]),
       family  = family,
-      alpha   = alpha
+      alpha   = alpha,
+      maxit   = maxit,
+      thresh  = thresh
     )
     lambda_grid <- model_orig$lambda
   } else {
@@ -97,7 +103,9 @@ wglmnet <- function(
       weights = as.numeric(new_data[, weight_col]),
       lambda  = lambda_grid,
       alpha   = alpha,
-      family  = family
+      family  = family,
+      maxit   = maxit,
+      thresh  = thresh
     )
 
     # Sample yhat
@@ -119,7 +127,7 @@ wglmnet <- function(
     R            = R,
     k            = k,
     B            = B,
-    outcome        = outcome,
+    outcome      = outcome,
     family       = family,
     weights      = weights
   )
@@ -132,7 +140,10 @@ wglmnet <- function(
     x       = as.matrix(data[, predictors]),
     weights = data[, weights],
     lambda  = lambda_min,
-    alpha   = alpha
+    alpha   = alpha,
+    family  = family,
+    maxit   = maxit,
+    thresh  = thresh
   )
 
   result <- list(
