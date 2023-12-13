@@ -62,6 +62,7 @@ wglmnet_alpha <- function(
   workers       = 1,
   plan_strategy = future::multicore
 ) {
+  RNGkind("L'Ecuyer-CMRG")
   if (!is.data.frame(data)) {
     data <- as.data.frame(data)
   }
