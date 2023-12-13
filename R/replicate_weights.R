@@ -83,7 +83,7 @@ replicate_weights <- function(
         strata  = formula_strata,
         weights = formula_weights,
         data    = data,
-        nest    = TRUE
+        nest    = FALSE
       )
 
       # Generate replicate weights based on the selected method
