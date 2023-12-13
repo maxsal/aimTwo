@@ -91,7 +91,11 @@ replicate_weights <- function(
         if (method %in% c("bootstrap", "subbootstrap")) {
           rep_des <- survey::as.svrepdesign(design = des, type = method, replicates = B)
         } else {
-          rep_des <- survey::as.svrepdesign(design = des, type = method)
+          if (is.null(strata) & method == "JKn") {
+            rep_des <- survey::as.svrepdesign(design = des, type = "JK1")
+          } else {
+            rep_des <- survey::as.svrepdesign(design = des, type = method)
+          }
         }
 
         mat_repw_ind       <- apply(rep_des$repweights$weights, 2, function(x) { x[rep_des$repweights$index] })

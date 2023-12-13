@@ -150,6 +150,7 @@ wglmnet <- function(
     lambda_grid   = lambda_grid,
     lambda_min    = lambda_min,
     error_min     = min(mean_error),
+    alpha         = alpha,
     average_error = mean_error,
     all_error     = error,
     model_min     = model
