@@ -22,7 +22,13 @@ Imports:
   survey,
   future,
   furrr,
-  utils
+  utils,
+  logistf,
+  pwr,
+  rcompanion,
+  DescTools,
+  ResourceSelection,
+  pROC
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
