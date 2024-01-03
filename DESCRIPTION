@@ -25,7 +25,6 @@ Imports:
   utils,
   logistf,
   pwr,
-  rcompanion,
   DescTools,
   ResourceSelection,
   pROC

@@ -5,7 +5,7 @@
 #' @param exposure The name of the exposure column
 #' @param covs A vector of covariates
 #' @param pl Whether to use profile likelihood (default: FALSE)
-#' @importFrom logistf logistf
+#' @importFrom logistf logistf logistpl.control
 #' @export
 getTopEffects <- function(prob, data, outcome = "case", exposure, covs = NULL, pl = FALSE) {
     riskBin              <- paste0("Top_", prob)
@@ -24,7 +24,7 @@ getTopEffects <- function(prob, data, outcome = "case", exposure, covs = NULL, p
     } else {
         vars <- c(outcome, riskBin)
     }
-    fitAsso2 <- logistf::logistf(tmp_f, data = tmp_data, plcontrol = logsitf::logistpl.control(maxit = 1E5), pl = pl)
+    fitAsso2 <- logistf::logistf(tmp_f, data = tmp_data, plcontrol = logistf::logistpl.control(maxit = 1E5), pl = pl)
     aimTwo::getValues(fitAsso2, riskBin)
 }
 
@@ -114,7 +114,6 @@ getValues <- function(fitAsso, exposure) {
 #' @param pctile_or Whether to calculate percentile-based ORs (default: TRUE)
 #' @param pl Whether to use profile likelihood (default: FALSE)
 #' @importFrom pROC roc
-#' @importFrom rcompagnion nagelkerke
 #' @importFrom ResourceSelection hoslem.test
 #' @importFrom DescTools BrierScore
 #' @return A data table with the following columns:
@@ -173,9 +172,10 @@ get_bin_diagnostics <- function(data, outcome, exposure, covs = NULL, pctile_or 
         ")"
     )
 
-    glm_no_cov_mod <- glm(f_nocovs, data = as.data.frame(data), family = binomial())
-    # R2 (rcompanion::nagelkerke)
-    nagel_out <- rcompanion::nagelkerke(fit = glm_no_cov_mod)
+    data2 <- as.data.frame(data)
+    glm_no_cov_mod <- glm(f_nocovs, data = data2, family = binomial())
+    # R2
+    nagel_out <- aimTwo::nagelkerke_r2(fit = glm_no_cov_mod)
     out[["R2 (McFadden)"]]                  <- nagel_out$Pseudo.R.squared.for.model.vs.null[1]
     out$"R2 (Cox and Snell [ML])"           <- nagel_out$Pseudo.R.squared.for.model.vs.null[2]
     out$"R2 (Nagelkerke [Cragg and Uhler])" <- nagel_out$Pseudo.R.squared.for.model.vs.null[3]
