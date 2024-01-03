@@ -25,7 +25,7 @@ getTopEffects <- function(prob, data, outcome = "case", exposure, covs = NULL, p
         vars <- c(outcome, riskBin)
     }
     fitAsso2 <- logistf::logistf(tmp_f, data = tmp_data, plcontrol = logsitf::logistpl.control(maxit = 1E5), pl = pl)
-    getValues(fitAsso2, riskBin)
+    aimTwo::getValues(fitAsso2, riskBin)
 }
 
 #' Helper: get top power
@@ -198,11 +198,11 @@ get_bin_diagnostics <- function(data, outcome, exposure, covs = NULL, pctile_or 
     if (pctile_or) {
         probs <- c(0.01, 0.02, 0.05, 0.1, 0.25)
         for (pr in probs) {
-            out <- c(out, getTopEffects(prob = pr, data = data, outcome = outcome, exposure = exposure, covs = covs, pl = pl))
+            out <- c(out, aimTwo::getTopEffects(prob = pr, data = data, outcome = outcome, exposure = exposure, covs = covs, pl = pl))
         }
         
         # determine percentile with at least 80% power (or the most powered percentiles)
-        ptest <- sapply(seq(0.005, 0.5, by = 0.005), \(x) getTopPower(x, data = data, outcome = outcome, exposure = exposure))
+        ptest <- sapply(seq(0.005, 0.5, by = 0.005), \(x) aimTwo::getTopPower(x, data = data, outcome = outcome, exposure = exposure))
         presults <- data.table("Top" = seq(0.005, 0.5, by = 0.005), t(ptest))
         #  presults <- data.table('Top' = seq(0.005, 0.5, by=0.005), t(ptest))
         maxp <- presults$Top[which(presults$h == max(presults$h, na.rm = TRUE))[1]]
@@ -216,7 +216,7 @@ get_bin_diagnostics <- function(data, outcome, exposure, covs = NULL, pctile_or 
             p80 <- p80[1]
         }
 
-        prs.p80 <- getTopEffects(prob = p80, data = data, outcome = outcome, exposure = exposure, covs = covs, pl = pl)
+        prs.p80 <- aimTwo::getTopEffects(prob = p80, data = data, outcome = outcome, exposure = exposure, covs = covs, pl = pl)
         names(prs.p80) <- gsub(p80, "MinPower80", names(prs.p80))
 
         out <- c(out, "MinPower80" = p80, prs.p80, "Top_Underpowered" = underpowered)
