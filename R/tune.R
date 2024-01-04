@@ -169,30 +169,65 @@ tune_ranger <- function(
 #' @param data dataset
 #' @param outcome name of outcome variable
 #' @param exposures vector of exposure variable names; if NULL, assumes all non-outcome variables
+#' @param alpha 0 for lasso, 1 for ridge, or a vector of numeric values to try for elastic net
 #' @param weight name of weight variable
 #' @param n_folds number of folds for cross-validation
 #' @param parallel parallelize?
 #' @param verbose print additional information
-#' @importFrom wlasso wlasso
+#' @param method method for replicate weight sampling
+#' @param family model family (binomial or guassian)
+#' @param ... additional arguments passed to wglmnet
+#' @importFrom wglmnet wglmnet
 #' @importFrom cli cli_alert_danger cli_progress_step cli_progress_done
 #' @importFrom dplyr mutate
 #' @importFrom data.table data.table
 #' @return return a table with hyperparameters and their values
 #' @export
-tune_wlasso <- function(
+tune_wglmnet <- function(
     data,
     outcome,
     exposures,
+    alpha = 1,
     weight,
     n_folds = 10,
     parallel = parallel,
-    verbose = TRUE
+    verbose = TRUE,
+    method = "dCV",
+    family = "binomial",
+    ...
 ) {
   if (verbose) {
     cli::cli_progress_step("Fitting weighted lasso...")
     on.exit(cli::cli_progress_done())
   }
+  if (length(alpha) == 1) {
+    if (alpha == 1) {
+      if (verbose) cli::cli_progress_step("Fitting weighted lasso...")
+      prefix <- "wlasso_"
+    }
+    if (alpha == 0) {
+      if (verbose) cli::cli_progress_step("Fitting weighted ridge...")
+      prefix <- "wridge_"
+    }
+    alpha_grid <- alpha
+  } else {
+    if (verbose) cli::cli_progress_step("Fitting weighted elastic net...")
+    alpha_grid <- alpha
+    prefix <- "wenet_"
+  }
+
   tryCatch({
+    wglmnet_fit <- wglmnet::wglmnet(
+      data = data, col.y = outcome,
+      col.x = exposures[!(exposures %in% c(outcome, weight))],
+      alpha = alpha,
+      weights = weight,
+      family = family,
+      lambda.grid = NULL,
+      method = method,
+      k = n_folds,
+      ...
+    )
     wlasso_fit <- wlasso::wlasso(
       data    = as.data.frame(data),
       col.y   = outcome,
@@ -202,8 +237,8 @@ tune_wlasso <- function(
       method  = "dCV", k = n_folds
     )
     data.table::data.table(
-      "parameter" = "wlasso.lambda.min",
-      "value"     = wlasso_fit$lambda.min
+      "parameter" = paste0(prefix, c("lambda.min", "alpha")),
+      "value"     = c(wglmnet_fit$lambda$min, wglmnet_fit$alpha$min)
     )
   }, error = function(err_msg) {
     print(err_msg)
@@ -214,7 +249,7 @@ tune_wlasso <- function(
       outcome        = outcome,
       exposures      = exposures[!(exposures %in% outcome)],
       n_folds        = n_folds,
-      alpha          = 1,
+      alpha          = alpha,
       penalty_factor = pf,
       parallel       = parallel
     ) |> dplyr::mutate(parameter = paste0("w", parameter))
@@ -226,7 +261,7 @@ tune_wlasso <- function(
       outcome        = outcome,
       exposures      = exposures[!(exposures %in% outcome)],
       n_folds        = n_folds,
-      alpha          = 1,
+      alpha          = alpha,
       penalty_factor = pf,
       parallel       = parallel
     ) |> dplyr::mutate(parameter = paste0("w", parameter))
@@ -305,7 +340,7 @@ tune_models <- function(
     out <- dplyr::bind_rows(out, ridge_mod)
     if (!is.null(weight)) {
       pf <- as.numeric(names(wdataset[names(wdataset) != outcome]) != weight)
-      wridge_mod <- tune_glmnet(
+      wridge_mod <- tune_wglmnet(
         data           = wdataset,
         outcome        = outcome,
         exposures      = c(exposures, weight),
@@ -332,11 +367,12 @@ tune_models <- function(
     )
     out <- dplyr::bind_rows(out, lasso_mod)
     if (!is.null(weight)) {
-      wlasso_mod <- tune_wlasso(
+      wlasso_mod <- tune_wglmnet(
         data      = wdataset,
         outcome   = outcome,
         exposures = c(exposures, weight),
         weight    = weight,
+        alpha     = 1,
         n_folds   = n_folds,
         verbose   = verbose
       )
@@ -357,7 +393,7 @@ tune_models <- function(
     )
     out <- dplyr::bind_rows(out, enet_mod)
     if (!is.null(weight)) {
-      wenet_mod <- tune_glmnet(
+      wenet_mod <- tune_wglmnet(
         data           = wdataset,
         outcome        = outcome,
         exposures      = exposures,
