@@ -18,7 +18,7 @@ getTopEffects <- function(prob, data, outcome = "case", exposure, covs = NULL, p
         tmp_f <- paste0(outcome, " ~ ", riskBin)
     }
     vars <- c(outcome, riskBin)
-    tmp_data <- na.omit(data[, ..vars])
+    tmp_data <- na.omit(subset(data, select = vars))
     if (!is.null(covs)) {
         vars <- c(outcome, riskBin, covs)
     } else {
