@@ -4,10 +4,12 @@
 \alias{nagelkerke_r2}
 \title{Helper: modified rcompanion::nagelkerke}
 \usage{
-nagelkerke_r2(fit, null = NULL, restrictNobs = FALSE)
+nagelkerke_r2(f, data, null = NULL, restrictNobs = FALSE)
 }
 \arguments{
-\item{fit}{A fitted model object}
+\item{f}{A formula}
+
+\item{data}{A data frame}
 
 \item{null}{A fitted null model object}
 

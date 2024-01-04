@@ -1,11 +1,13 @@
 #' Helper: modified rcompanion::nagelkerke
-#' @param fit A fitted model object
+#' @param f A formula
+#' @param data A data frame
 #' @param null A fitted null model object
 #' @param restrictNobs Whether to restrict the number of observations to the number of observations in the fitted model (default: FALSE)
 #' @export
 nagelkerke_r2 <- function(
-  fit, null = NULL, restrictNobs = FALSE
+  f, data, null = NULL, restrictNobs = FALSE
 ) {
+  fit <- glm(formula = f, data = data, family = binomial())
   if(!restrictNobs & is.null(null)) {
     null = update(fit, ~ 1)
   }
