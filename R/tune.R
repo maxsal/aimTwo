@@ -228,21 +228,13 @@ tune_wglmnet <- function(
       k = n_folds,
       ...
     )
-    wlasso_fit <- wlasso::wlasso(
-      data    = as.data.frame(data),
-      col.y   = outcome,
-      col.x   = exposures[!(exposures %in% c(outcome, weight))],
-      family  = "binomial",
-      weights = weight,
-      method  = "dCV", k = n_folds
-    )
     data.table::data.table(
       "parameter" = paste0(prefix, c("lambda.min", "alpha")),
       "value"     = c(wglmnet_fit$lambda$min, wglmnet_fit$alpha$min)
     )
   }, error = function(err_msg) {
     print(err_msg)
-    cli::cli_alert_danger("issue with wlasso, switching to glmnet")
+    cli::cli_alert_danger("issue with wglmnet, switching to glmnet")
     pf <- as.numeric(names(data)[names(data) != outcome] != weight)
     tune_glmnet(
       data           = data,
@@ -254,7 +246,7 @@ tune_wglmnet <- function(
       parallel       = parallel
     ) |> dplyr::mutate(parameter = paste0("w", parameter))
   }, warning = function(wrn_msg) {
-    cli::cli_alert_danger("issue with wlasso, switching to glmnet: {wrn_msg}")
+    cli::cli_alert_danger("issue with wglmnet, switching to glmnet: {wrn_msg}")
     pf <- as.numeric(names(data)[names(data) != outcome] != weight)
     tune_glmnet(
       data           = data,
