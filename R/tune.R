@@ -196,10 +196,6 @@ tune_wglmnet <- function(
     family = "binomial",
     ...
 ) {
-  if (verbose) {
-    cli::cli_progress_step("Fitting weighted lasso...")
-    on.exit(cli::cli_progress_done())
-  }
   if (length(alpha) == 1) {
     if (alpha == 1) {
       if (verbose) cli::cli_progress_step("Fitting weighted lasso...")
@@ -215,6 +211,7 @@ tune_wglmnet <- function(
     alpha_grid <- alpha
     prefix <- "wenet_"
   }
+  if (verbose) on.exit(cli::cli_progress_done())
 
   tryCatch({
     wglmnet_fit <- wglmnet::wglmnet(
