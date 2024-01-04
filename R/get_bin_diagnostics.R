@@ -179,7 +179,7 @@ get_bin_diagnostics <- function(data, outcome, exposure, covs = NULL, pctile_or 
     out$"R2 (Nagelkerke [Cragg and Uhler])" <- nagel_out$nagelkerke_r2
 
     # HL test (ResourceSelection::hoslem.test)
-    glm_no_cov_mod <- glm(f_nocovs, data = data2, family = binomial())
+    glm_no_cov_mod <- glm(f_nocovs, data = data, family = binomial())
     hl_out <- ResourceSelection::hoslem.test(glm_no_cov_mod$y, fitted(glm_no_cov_mod), g = 10)
     out$HosmerLemeshow_ChiSq <- hl_out$statistic[1]
     out$HosmerLemeshow_P     <- hl_out$p.value
