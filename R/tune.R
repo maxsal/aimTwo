@@ -331,7 +331,8 @@ tune_models <- function(
       wridge_mod <- tune_wglmnet(
         data           = wdataset,
         outcome        = outcome,
-        exposures      = c(exposures, weight),
+        exposures      = exposures,
+        weight         = weight,
         n_folds        = n_folds,
         alpha          = 0,
         parallel       = parallel,
@@ -357,7 +358,7 @@ tune_models <- function(
       wlasso_mod <- tune_wglmnet(
         data      = wdataset,
         outcome   = outcome,
-        exposures = c(exposures, weight),
+        exposures = exposures,
         weight    = weight,
         alpha     = 1,
         n_folds   = n_folds,
@@ -384,6 +385,7 @@ tune_models <- function(
         data           = wdataset,
         outcome        = outcome,
         exposures      = exposures,
+        weight         = weight,
         n_folds        = n_folds,
         alpha          = alpha,
         parallel       = parallel,
