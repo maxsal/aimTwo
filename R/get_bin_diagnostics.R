@@ -176,9 +176,9 @@ get_bin_diagnostics <- function(data, outcome, exposure, covs = NULL, pctile_or 
     glm_no_cov_mod <- glm(f_nocovs, data = data2, family = binomial())
     # R2
     nagel_out <- aimTwo::nagelkerke_r2(fit = glm_no_cov_mod)
-    out[["R2 (McFadden)"]]                  <- nagel_out$Pseudo.R.squared.for.model.vs.null[1]
-    out$"R2 (Cox and Snell [ML])"           <- nagel_out$Pseudo.R.squared.for.model.vs.null[2]
-    out$"R2 (Nagelkerke [Cragg and Uhler])" <- nagel_out$Pseudo.R.squared.for.model.vs.null[3]
+    out[["R2 (McFadden)"]]                  <- nagel_out$mcfadden_r2
+    out$"R2 (Cox and Snell [ML])"           <- nagel_out$cox_snell_r2
+    out$"R2 (Nagelkerke [Cragg and Uhler])" <- nagel_out$nagelkerke_r2
 
     # HL test (ResourceSelection::hoslem.test)
     hl_out <- ResourceSelection::hoslem.test(glm_no_cov_mod$y, fitted(glm_no_cov_mod), g = 10)
