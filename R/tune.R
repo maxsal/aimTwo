@@ -328,14 +328,12 @@ tune_models <- function(
     )
     out <- dplyr::bind_rows(out, ridge_mod)
     if (!is.null(weight)) {
-      pf <- as.numeric(names(wdataset[names(wdataset) != outcome]) != weight)
       wridge_mod <- tune_wglmnet(
         data           = wdataset,
         outcome        = outcome,
         exposures      = c(exposures, weight),
         n_folds        = n_folds,
         alpha          = 0,
-        penalty_factor = pf,
         parallel       = parallel,
         verbose        = verbose
       ) |>
@@ -388,7 +386,6 @@ tune_models <- function(
         exposures      = exposures,
         n_folds        = n_folds,
         alpha          = alpha,
-        penalty_factor = pf,
         parallel       = parallel,
         verbose        = verbose
       ) |> dplyr::mutate(parameter = paste0("w", parameter))
