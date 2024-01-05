@@ -240,7 +240,7 @@ tune_wglmnet <- function(
       exposures      = exposures[!(exposures %in% outcome)],
       n_folds        = n_folds,
       alpha          = a,
-      penalty_factor = pf,
+      penalty.factor = pf,
       parallel       = parallel
     ) |> dplyr::mutate(parameter = paste0("w", parameter))
   }, warning = function(wrn_msg) {
@@ -252,7 +252,7 @@ tune_wglmnet <- function(
       exposures      = exposures[!(exposures %in% outcome)],
       n_folds        = n_folds,
       alpha          = a,
-      penalty_factor = pf,
+      penalty.factor = pf,
       parallel       = parallel
     ) |> dplyr::mutate(parameter = paste0("w", parameter))
   })
