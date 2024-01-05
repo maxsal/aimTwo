@@ -17,7 +17,7 @@ tune_glmnet <- function(
     data,
     outcome,
     exposures,
-    alpha,
+    .alpha,
     parallel = TRUE,
     n_folds = 10,
     family  = "binomial",
@@ -30,29 +30,29 @@ tune_glmnet <- function(
 
   set.seed(123)
 
-  if (length(alpha) == 1) {
-    if (alpha == 1) {
+  if (length(.alpha) == 1) {
+    if (.alpha == 1) {
       if (verbose) cli::cli_progress_step("Fitting lasso...")
       prefix <- "lasso_"
     }
-    if (alpha == 0) {
+    if (.alpha == 0) {
       if (verbose) cli::cli_progress_step("Fitting ridge...")
       prefix <- "ridge_"
     }
-    alpha_grid = alpha
+    .alpha_grid = .alpha
   } else {
     if (verbose) cli::cli_progress_step("Fitting elastic net...")
-    alpha_grid <- alpha
+    .alpha_grid <- .alpha
     prefix     <- "enet_"
   }
   if (verbose) on.exit(cli::cli_progress_done())
 
   cv_fit_list <- list()
 
-  for (a in alpha_grid) {
+  for (a in .alpha_grid) {
     cv_fit <- glmnet::cv.glmnet(
       x, y,
-      alpha    = a,
+      .alpha    = a,
       nfolds   = n_folds,
       family   = family,
       parallel = parallel,
@@ -241,7 +241,7 @@ tune_wglmnet <- function(
       outcome        = outcome,
       exposures      = wex_check,
       n_folds        = n_folds,
-      alpha          = a,
+      .alpha         = a,
       penalty.factor = pf,
       parallel       = parallel
     ) |> dplyr::mutate(parameter = paste0("w", parameter))
@@ -255,7 +255,7 @@ tune_wglmnet <- function(
       outcome        = outcome,
       exposures      = wex_check,
       n_folds        = n_folds,
-      alpha          = a,
+      .alpha         = a,
       penalty.factor = pf,
       parallel       = parallel
     ) |> dplyr::mutate(parameter = paste0("w", parameter))
@@ -327,7 +327,7 @@ tune_models <- function(
       outcome   = outcome,
       exposures = exposures,
       n_folds   = n_folds,
-      alpha     = 0,
+      .alpha    = 0,
       parallel  = parallel,
       verbose   = verbose
     )
@@ -354,7 +354,7 @@ tune_models <- function(
       outcome   = outcome,
       exposures = exposures,
       n_folds   = n_folds,
-      alpha     = 1,
+      .alpha    = 1,
       parallel  = parallel,
       verbose   = verbose
     )
@@ -380,7 +380,7 @@ tune_models <- function(
       outcome   = outcome,
       exposures = exposures,
       n_folds   = n_folds,
-      alpha     = alpha,
+      .alpha    = alpha,
       parallel  = parallel,
       verbose   = verbose
     )
