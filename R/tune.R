@@ -212,6 +212,7 @@ tune_wglmnet <- function(
     prefix <- "wenet_"
   }
   if (verbose) on.exit(cli::cli_progress_done())
+  a <- alpha
 
   tryCatch({
     wglmnet_fit <- wglmnet::wglmnet(
@@ -238,7 +239,7 @@ tune_wglmnet <- function(
       outcome        = outcome,
       exposures      = exposures[!(exposures %in% outcome)],
       n_folds        = n_folds,
-      alpha          = alpha,
+      alpha          = a,
       penalty_factor = pf,
       parallel       = parallel
     ) |> dplyr::mutate(parameter = paste0("w", parameter))
@@ -250,7 +251,7 @@ tune_wglmnet <- function(
       outcome        = outcome,
       exposures      = exposures[!(exposures %in% outcome)],
       n_folds        = n_folds,
-      alpha          = alpha,
+      alpha          = a,
       penalty_factor = pf,
       parallel       = parallel
     ) |> dplyr::mutate(parameter = paste0("w", parameter))
