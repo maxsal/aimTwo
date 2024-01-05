@@ -49,18 +49,18 @@ tune_glmnet <- function(
 
   cv_fit_list <- list()
 
-  for (alpha in alpha_grid) {
+  for (a in alpha_grid) {
     cv_fit <- glmnet::cv.glmnet(
       x, y,
-      alpha    = alpha,
+      alpha    = a,
       nfolds   = n_folds,
       family   = family,
       parallel = parallel,
       ...
     )
 
-    cv_fit$alpha <- alpha
-    cv_fit_list[[paste0("alpha_", alpha)]] <- cv_fit
+    cv_fit$alpha <- a
+    cv_fit_list[[paste0("alpha_", a)]] <- cv_fit
   }
 
   # Find model with smallest cvm
