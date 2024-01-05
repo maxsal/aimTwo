@@ -235,7 +235,7 @@ tune_wglmnet <- function(
     cli::cli_alert_danger("issue with wglmnet, switching to glmnet")
     ex_check <- exposures[!(exposures %in% outcome)]
     wex_check <- c(ex_check, weight)
-    pf <- as.numeric(wex_check[wex_check != weight])
+    pf <- as.numeric(wex_check != weight)
     tune_glmnet(
       data           = data,
       outcome        = outcome,
@@ -249,7 +249,7 @@ tune_wglmnet <- function(
     cli::cli_alert_danger("issue with wglmnet, switching to glmnet: {wrn_msg}")
     ex_check <- exposures[!(exposures %in% outcome)]
     wex_check <- c(ex_check, weight)
-    pf <- as.numeric(wex_check[wex_check != weight])
+    pf <- as.numeric(wex_check != weight)
     tune_glmnet(
       data           = data,
       outcome        = outcome,
