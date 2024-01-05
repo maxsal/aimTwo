@@ -247,7 +247,9 @@ tune_wglmnet <- function(
     ) |> dplyr::mutate(parameter = paste0("w", parameter))
   }, warning = function(wrn_msg) {
     cli::cli_alert_danger("issue with wglmnet, switching to glmnet: {wrn_msg}")
-    pf <- as.numeric(names(data)[names(data) != outcome] != weight)
+    ex_check <- exposures[!(exposures %in% outcome)]
+    wex_check <- c(ex_check, weight)
+    pf <- as.numeric(wex_check[wex_check != weight])
     tune_glmnet(
       data           = data,
       outcome        = outcome,
