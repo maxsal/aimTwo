@@ -52,7 +52,7 @@ tune_glmnet <- function(
   for (a in .alpha_grid) {
     cv_fit <- glmnet::cv.glmnet(
       x, y,
-      .alpha    = a,
+      alpha    = a,
       nfolds   = n_folds,
       family   = family,
       parallel = parallel,
@@ -190,7 +190,7 @@ tune_wglmnet <- function(
     alpha = 1,
     weight,
     n_folds = 10,
-    parallel = parallel,
+    parallel = FALSE,
     verbose = TRUE,
     method = "dCV",
     family = "binomial",
@@ -233,9 +233,9 @@ tune_wglmnet <- function(
   }, error = function(err_msg) {
     print(err_msg)
     cli::cli_alert_danger("issue with wglmnet, switching to glmnet")
-    ex_check <- exposures[!(exposures %in% outcome)]
+    ex_check  <- exposures[!(exposures %in% outcome)]
     wex_check <- c(ex_check, weight)
-    pf <- as.numeric(wex_check != weight)
+    pf        <- as.numeric(wex_check != weight)
     tune_glmnet(
       data           = data,
       outcome        = outcome,
@@ -247,9 +247,9 @@ tune_wglmnet <- function(
     ) |> dplyr::mutate(parameter = paste0("w", parameter))
   }, warning = function(wrn_msg) {
     cli::cli_alert_danger("issue with wglmnet, switching to glmnet: {wrn_msg}")
-    ex_check <- exposures[!(exposures %in% outcome)]
+    ex_check  <- exposures[!(exposures %in% outcome)]
     wex_check <- c(ex_check, weight)
-    pf <- as.numeric(wex_check != weight)
+    pf        <- as.numeric(wex_check != weight)
     tune_glmnet(
       data           = data,
       outcome        = outcome,
