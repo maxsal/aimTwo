@@ -151,7 +151,14 @@ get_bin_diagnostics <- function(data, outcome, exposure, covs = NULL, pctile_or 
         format(round(out$or_upper, 2), nsmall = 2),
         ")"
     )
-    out$log10p <- -log10(summary(glm_mod)$coefficients[exposure, 4])
+    out$log10p <- tryCatch(
+        {
+            -log10(summary(glm_mod)$coefficients[exposure, 4])
+        },
+        error = function(e) {
+            NA
+        }
+    )
 
     # AUC (pROC::roc)
     tmp_auc <- suppressMessages(pROC::roc(
