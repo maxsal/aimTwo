@@ -475,8 +475,7 @@ tune_models <- function(
         weights = weight,
         mtry_grid             = mtry_seq,
     min.node.size_grid = node_size_seq,
-    num_trees             = n_trees,
-      return_mod = return_mod
+    num_trees             = n_trees
       )
       out[["wrf"]] <- wrf_mod
     }
