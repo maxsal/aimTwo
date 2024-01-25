@@ -7,6 +7,7 @@
 #' @param n_folds number of folds for cross-validation
 #' @param family model family (binomial or guassian)
 #' @param verbose print additional information
+#' @param return_mod return the full cv.glmnet object?
 #' @param ... additional arguments passed to cv.glmnet
 #' @importFrom glmnet cv.glmnet
 #' @importFrom data.table data.table
@@ -22,10 +23,12 @@ tune_glmnet <- function(
     n_folds = 10,
     family  = "binomial",
     verbose = TRUE,
+    return_mod = FALSE,
     ...
 ) {
 
-  x <- as.matrix(data[exposures])
+  if (!data.table::is.data.table(data)) data <- data.table::as.data.table(data)
+  x <- as.matrix(data[, ..exposures])
   y <- data[[outcome]]
 
   set.seed(123)
@@ -70,10 +73,26 @@ tune_glmnet <- function(
   best_lambda     <- best_model$lambda.min
   best_lambda_1se <- best_model$lambda.1se
 
-  return(data.table::data.table(
-    "parameter" = paste0(prefix, c("alpha", "lambda.min", "lambda.1se")),
-    "value"     = c(best_alpha, best_lambda, best_lambda_1se)
-  ))
+  out <- list(
+    param = data.table::data.table(
+      "parameter" = paste0(prefix, c("alpha", "lambda.min", "lambda.1se")),
+      "value"     = c(best_alpha, best_lambda, best_lambda_1se)
+    )
+  )
+
+  if (return_mod) {
+    out$mod <- glmnet::glmnet(
+      x, y,
+      alpha = best_alpha,
+      lambda = best_lambda,
+      nfolds = n_folds,
+      family = family,
+      parallel = parallel,
+    )
+  }
+
+  return(out)
+
 }
 
 
@@ -86,6 +105,7 @@ tune_glmnet <- function(
 #' @param n_cores number of cores if parallel
 #' @param n_trees number of trees to grow
 #' @param verbose print additional information
+#' @param return_mod return the full ranger object?
 #' @importFrom ranger ranger
 #' @importFrom data.table data.table rbindlist as.data.table
 #' @importFrom cli  cli_progress_step cli_alert cli_progress_update cli_progress_done
@@ -101,13 +121,13 @@ tune_ranger <- function(
     node_size_seq = NULL,
     n_cores       = 1,
     n_trees       = 500,
-    verbose       = TRUE
+    verbose       = TRUE,
+    return_mod   = FALSE
 ) {
   if (verbose) {
     cli::cli_progress_step("Fitting ranger random forest...")
     on.exit(cli::cli_progress_done())
   }
-  out <- data.table::data.table()
 
   if (is.null(mtry_seq)) {
     p <- ncol(data) - 1
@@ -146,20 +166,33 @@ tune_ranger <- function(
   }
   cli::cli_progress_done()
 
-  out <- data.table::rbindlist(list(
-    out,
-    data.table::data.table(
+  out <- list(
+    param = data.table::data.table(
       "parameter" = c("rf.mtry", "rf.node_size"),
-      "value"     = c(
+      "value" = c(
         rf |>
-            dplyr::filter(oob_rmse == min(oob_rmse, na.rm = TRUE)) |>
-            dplyr::pull(mtry),
+          dplyr::filter(oob_rmse == min(oob_rmse, na.rm = TRUE)) |>
+          dplyr::pull(mtry),
         rf |>
-            dplyr::filter(oob_rmse == min(oob_rmse, na.rm = TRUE)) |>
-            dplyr::pull(node_size)
+          dplyr::filter(oob_rmse == min(oob_rmse, na.rm = TRUE)) |>
+          dplyr::pull(node_size)
       )
     )
-  ), use.names = TRUE, fill = TRUE)
+  )
+
+  if (return_mod) {
+    model <- ranger::ranger(
+      formula         = f,
+      data            = data |> dplyr::select(tidyselect::all_of(vars)),
+      num.trees       = n_trees,
+      mtry            = out$param[parameter == "rf.mtry", value],
+      min.node.size   = out$param[parameter == "rf.node_size", value],
+      num.threads     = n_cores,
+      write.forest = TRUE,
+      importance = "permutation"
+    )
+    out$mod <- model
+  }
 
   return(out)
 
@@ -176,6 +209,7 @@ tune_ranger <- function(
 #' @param verbose print additional information
 #' @param method method for replicate weight sampling
 #' @param family model family (binomial or guassian)
+#' @param return_mod return the full wglmnet object?
 #' @param ... additional arguments passed to wglmnet
 #' @importFrom wglmnet wglmnet
 #' @importFrom cli cli_alert_danger cli_progress_step cli_progress_done
@@ -194,6 +228,7 @@ tune_wglmnet <- function(
     verbose = TRUE,
     method = "dCV",
     family = "binomial",
+    return_mod = FALSE,
     ...
 ) {
   if (length(alpha) == 1) {
@@ -226,10 +261,16 @@ tune_wglmnet <- function(
       k = n_folds,
       ...
     )
-    data.table::data.table(
-      "parameter" = paste0(prefix, c("lambda.min", "alpha")),
-      "value"     = c(wglmnet_fit$lambda$min, wglmnet_fit$alpha$min)
+    out <- list(
+      param = data.table::data.table(
+        "parameter" = paste0(prefix, c("lambda.min", "alpha")),
+        "value"     = c(wglmnet_fit$lambda$min, wglmnet_fit$alpha$min)
+      )
     )
+    if (return_mod) {
+      out$mod <- wglmnet_fit
+    }
+    return(out)
   }, error = function(err_msg) {
     print(err_msg)
     cli::cli_alert_danger("issue with wglmnet, switching to glmnet")
@@ -243,7 +284,8 @@ tune_wglmnet <- function(
       n_folds        = n_folds,
       .alpha         = a,
       penalty.factor = pf,
-      parallel       = parallel
+      parallel       = parallel,
+      return_mod    = return_mod,
     ) |> dplyr::mutate(parameter = paste0("w", parameter))
   }, warning = function(wrn_msg) {
     cli::cli_alert_danger("issue with wglmnet, switching to glmnet: {wrn_msg}")
@@ -257,6 +299,7 @@ tune_wglmnet <- function(
       n_folds        = n_folds,
       .alpha         = a,
       penalty.factor = pf,
+      return_mod = return_mod,
       parallel       = parallel
     ) |> dplyr::mutate(parameter = paste0("w", parameter))
   })
@@ -312,7 +355,8 @@ tune_models <- function(
       exposures <- names(dataset)[names(dataset) != outcome]
     }
   } else {
-    dataset  <- data.table::copy(data[stats::complete.cases(data[names(data)[names(data) != weight]]), ])
+    use_these_vars <- names(data)[!names(data) %in% c("id", weight)]
+    dataset  <- data.table::copy(data[stats::complete.cases(data[, ..use_these_vars]), !c("id")])
     wdataset <- data.table::copy(dataset[stats::complete.cases(dataset), ])
     if (is.null(exposures)) {
       exposures <- names(dataset)[!names(dataset) %in% c(outcome, weight)]
