@@ -288,7 +288,7 @@ tune_wglmnet <- function(
       penalty.factor = pf,
       parallel       = parallel,
       return_mod    = return_mod,
-    ) |> dplyr::mutate(parameter = paste0("w", parameter))
+    )
   }, warning = function(wrn_msg) {
     cli::cli_alert_danger("issue with wglmnet, switching to glmnet: {wrn_msg}")
     ex_check  <- exposures[!(exposures %in% outcome)]
@@ -303,7 +303,7 @@ tune_wglmnet <- function(
       penalty.factor = pf,
       return_mod = return_mod,
       parallel       = parallel
-    ) |> dplyr::mutate(parameter = paste0("w", parameter))
+    )
   })
 }
 
@@ -365,7 +365,7 @@ tune_models <- function(
     }
   }
 
-  out <- data.table::data.table()
+  out <- list()
 
   if ("ridge" %in% methods) {
     ridge_mod <- tune_glmnet(
@@ -377,7 +377,7 @@ tune_models <- function(
       parallel  = parallel,
       verbose   = verbose
     )
-    out <- dplyr::bind_rows(out, ridge_mod)
+    out[["ridge"]] <- ridge_mod
     if (!is.null(weight)) {
       wridge_mod <- tune_wglmnet(
         data           = wdataset,
@@ -388,9 +388,8 @@ tune_models <- function(
         alpha          = 0,
         parallel       = parallel,
         verbose        = verbose
-      ) |>
-        dplyr::mutate(parameter = paste0("w", parameter))
-      out <- dplyr::bind_rows(out, wridge_mod)
+      ) 
+      out[["wridge"]] <- wridge_mod
     }
   }
 
@@ -404,7 +403,7 @@ tune_models <- function(
       parallel  = parallel,
       verbose   = verbose
     )
-    out <- dplyr::bind_rows(out, lasso_mod)
+    out[["lasso"]] <- lasso_mod
     if (!is.null(weight)) {
       wlasso_mod <- tune_wglmnet(
         data      = wdataset,
@@ -415,7 +414,7 @@ tune_models <- function(
         n_folds   = n_folds,
         verbose   = verbose
       )
-      out <- dplyr::bind_rows(out, wlasso_mod)
+      out[["wlasso"]] <- wlasso_mod
     }
   }
 
