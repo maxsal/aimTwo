@@ -140,7 +140,6 @@ tune_ranger <- function(
     node_size_seq <- round(seq(3, round(nrow(data) / 100), length.out = 5))
   }
 
-  cli::cli_progress_step("Fitting random forest...")
   rf <- expand.grid(
     mtry        = mtry_seq,
     node_size   = node_size_seq,
