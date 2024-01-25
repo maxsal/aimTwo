@@ -187,8 +187,8 @@ tune_ranger <- function(
       formula         = f,
       data            = data |> dplyr::select(tidyselect::all_of(vars)),
       num.trees       = n_trees,
-      mtry            = out$param[parameter == "rf.mtry", value],
-      min.node.size   = out$param[parameter == "rf.node_size", value],
+      mtry            = out$param[parameter == "rf.mtry", ][["value"]],
+      min.node.size   = out$param[parameter == "rf.node_size", ][["value"]],
       num.threads     = n_cores,
       write.forest = TRUE,
       importance = "permutation"
