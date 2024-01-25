@@ -137,8 +137,8 @@ tune_ranger <- function(
   }
 
   if (is.null(node_size_seq)) {
-    min.node.size_grid <- c(1, 3, 5, 10, 20)
-    min.node.size_grid <- min.node.size_grid[min.node.size_grid < nrow(data)]
+    node_size_seq <- c(1, 3, 5, 10, 20)
+    node_size_seq <- node_size_seq[node_size_seq < nrow(data)]
   }
 
   rf <- expand.grid(
