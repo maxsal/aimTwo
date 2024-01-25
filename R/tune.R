@@ -360,7 +360,8 @@ tune_models <- function(
     }
   } else {
     use_these_vars <- names(data)[!names(data) %in% c("id", weight)]
-    dataset  <- data.table::copy(data[stats::complete.cases(data[, ..use_these_vars]), !c("id")])
+    dataset  <- data.table::copy(data[stats::complete.cases(data[, ..use_these_vars]), ])
+    dataset[["id"]] <- NULL
     wdataset <- data.table::copy(dataset[stats::complete.cases(dataset), ])
     if (is.null(exposures)) {
       exposures <- names(dataset)[!names(dataset) %in% c(outcome, weight)]
