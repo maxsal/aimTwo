@@ -12,6 +12,8 @@
 #' @importFrom glmnet cv.glmnet
 #' @importFrom data.table data.table
 #' @importFrom cli cli_progress_step cli_progress_done
+#' @importFrom dplyr select
+#' @importFrom tidyselect all_of
 #' @return return a table with hyperparameters and their values
 #' @export
 tune_glmnet <- function(
@@ -28,7 +30,7 @@ tune_glmnet <- function(
 ) {
 
   if (!data.table::is.data.table(data)) data <- data.table::as.data.table(data)
-  x <- as.matrix(data[, ..exposures])
+  x <- as.matrix(data |> dplyr::select(tidyselect::all_of(exposures)))
   y <- data[[outcome]]
 
   set.seed(123)
