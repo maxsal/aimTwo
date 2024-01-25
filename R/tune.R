@@ -321,6 +321,7 @@ tune_wglmnet <- function(
 #' @param node_size_seq value of min.node.size to try via tune_rf if rf method is selected
 #' @param n_trees number of trees to grow if rf method is selected
 #' @param verbose print additional information
+#' @param return_mod return the full model object?
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom doParallel registerDoParallel
 #' @importFrom dplyr mutate bind_rows
@@ -342,7 +343,8 @@ tune_models <- function(
     mtry_seq      = NULL,
     node_size_seq = NULL,
     n_trees       = 500,
-    verbose       = TRUE
+    verbose       = TRUE,
+    return_mod    = TRUE
 ) {
 
   if (parallel) {
@@ -375,7 +377,8 @@ tune_models <- function(
       n_folds   = n_folds,
       .alpha    = 0,
       parallel  = parallel,
-      verbose   = verbose
+      verbose   = verbose,
+      return_mod = return_mod
     )
     out[["ridge"]] <- ridge_mod
     if (!is.null(weight)) {
@@ -387,7 +390,8 @@ tune_models <- function(
         n_folds        = n_folds,
         alpha          = 0,
         parallel       = parallel,
-        verbose        = verbose
+        verbose        = verbose,
+      return_mod = return_mod
       ) 
       out[["wridge"]] <- wridge_mod
     }
@@ -401,7 +405,8 @@ tune_models <- function(
       n_folds   = n_folds,
       .alpha    = 1,
       parallel  = parallel,
-      verbose   = verbose
+      verbose   = verbose,
+      return_mod = return_mod
     )
     out[["lasso"]] <- lasso_mod
     if (!is.null(weight)) {
@@ -412,7 +417,8 @@ tune_models <- function(
         weight    = weight,
         alpha     = 1,
         n_folds   = n_folds,
-        verbose   = verbose
+        verbose   = verbose,
+      return_mod = return_mod
       )
       out[["wlasso"]] <- wlasso_mod
     }
@@ -427,9 +433,10 @@ tune_models <- function(
       n_folds   = n_folds,
       .alpha    = alpha,
       parallel  = parallel,
-      verbose   = verbose
+      verbose   = verbose,
+      return_mod = return_mod
     )
-    out <- dplyr::bind_rows(out, enet_mod)
+    out[["enet"]] <- enet_mod
     if (!is.null(weight)) {
       wenet_mod <- tune_wglmnet(
         data           = wdataset,
@@ -439,9 +446,10 @@ tune_models <- function(
         n_folds        = n_folds,
         alpha          = alpha,
         parallel       = parallel,
-        verbose        = verbose
-      ) |> dplyr::mutate(parameter = paste0("w", parameter))
-      out <- dplyr::bind_rows(out, wenet_mod)
+        verbose        = verbose,
+      return_mod = return_mod
+      )
+      out[["wenet"]] <- wenet_mod
     }
   }
 
@@ -454,9 +462,23 @@ tune_models <- function(
       mtry_seq      = mtry_seq,
       node_size_seq = node_size_seq,
       n_trees       = n_trees,
-      verbose       = verbose
+      verbose       = verbose,
+      return_mod = return_mod
     )
-    out <- dplyr::bind_rows(out, rf_mod)
+    out[["rf"]] <- rf_mod
+    if (!is.null(weight)) {
+      wrf_mod <- wglmnet::wranger(
+        data = data,
+        col.y = outcome,
+        col.x = exposures,
+        weights = weight,
+        mtry_grid             = mtry_seq,
+    min.node.size_grid = node_size_seq,
+    num_trees             = n_trees,
+      return_mod = return_mod
+      )
+      out[["wrf"]] <- wrf_mod
+    }
   }
 
   return(out)
