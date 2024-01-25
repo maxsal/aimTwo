@@ -469,7 +469,7 @@ tune_models <- function(
     out[["rf"]] <- rf_mod
     if (!is.null(weight)) {
       wrf_mod <- wglmnet::wranger(
-        data = data,
+        data = wdataset,
         col.y = outcome,
         col.x = exposures,
         weights = weight,
