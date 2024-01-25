@@ -133,11 +133,12 @@ tune_ranger <- function(
 
   if (is.null(mtry_seq)) {
     p <- ncol(data) - 1
-    mtry_seq <- round(c(p/2, p/3, sqrt(p) * c(0.5, 1, 2), log2(p)))
+    mtry_seq <- floor(sqrt(p) * c(0.25, 0.5, 1, 2, 4))
   }
 
   if (is.null(node_size_seq)) {
-    node_size_seq <- round(seq(3, round(nrow(data) / 100), length.out = 5))
+    min.node.size_grid <- c(1, 3, 5, 10, 20)
+    min.node.size_grid <- min.node.size_grid[min.node.size_grid < nrow(data)]
   }
 
   rf <- expand.grid(
