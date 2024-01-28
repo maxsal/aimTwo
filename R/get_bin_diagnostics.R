@@ -222,8 +222,12 @@ get_bin_diagnostics <- function(data, outcome, exposure, covs = NULL, pctile_or 
             p80 <- p80[1]
         }
 
-        prs.p80 <- aimTwo::getTopEffects(prob = p80, data = data, outcome = outcome, exposure = exposure, covs = covs, pl = pl)
-        names(prs.p80) <- gsub(p80, "MinPower80", names(prs.p80))
+        if (is.na(p80)) {
+            prs.p80 <- NA
+        } else {
+            prs.p80 <- aimTwo::getTopEffects(prob = p80, data = data, outcome = outcome, exposure = exposure, covs = covs, pl = pl)
+            names(prs.p80) <- gsub(p80, "MinPower80", names(prs.p80))
+        }
 
         out <- c(out, "MinPower80" = p80, prs.p80, "Top_Underpowered" = underpowered)
     } 
