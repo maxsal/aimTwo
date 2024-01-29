@@ -111,3 +111,42 @@ betas_from_mod <- function(model, intercept = FALSE) {
   out[["model"]] <- class(model)[1]
   return(out)
 }
+
+#' Calculate predicted values from a model
+#' @param data_table A data.table with the data to predict on
+#' @param beta_table A data.table with the beta coefficients
+#' @param expit_out Whether to also return the predicted values on the probability scale
+#' @param simplify Whether to return only predicted values (TRUE) or the full data.table with predicted values (FALSE)
+#' @return A data.table with the following columns:
+#' \itemize{
+#'  \item \code{pred}: The predicted value
+#' \item \code{pred_expit}: The predicted value on the logit scale
+#' }
+#' @export
+sum_beta_weights <- function(data_table, beta_table, expit_out = TRUE, simplify = TRUE) {
+    pred_cols <- beta_table[["predictor"]]
+    pred_cols <- pred_cols[!(pred_cols %in% c("Intercept", "(Intercept)"))]
+    data_out <- data.table::copy(data.table::as.data.table(data_table))
+
+    if ("(Intercept)" %in% beta_table[, predictor]) {
+        data_out[["pred"]] <- beta_table[predictor == "(Intercept)", beta]
+        expit <- function(x) 1 / (1 + exp(-x))
+    } else {
+        data_out[["pred"]] <- 0
+    }
+
+    for (i in pred_cols) {
+        set(
+            data_out,
+            j = "pred",
+            value = data_out[, pred] + (beta_table[predictor == i, beta] * data_out[[i]])
+        )
+    }
+    if (simplify) {
+        data_out <- data_out[, .(pred)]
+    }
+    if ("(Intercept)" %in% beta_table[, predictor] & expit_out == TRUE) {
+        data_out[, pred_expit := expit(pred)]
+    }
+    data_out[]
+}
