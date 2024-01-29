@@ -107,5 +107,5 @@ betas_from_mod <- function(model, intercept = FALSE) {
     model_class,
     glm = betas_from_glm(model, intercept = intercept),
     logistf = betas_from_logistf(model, intercept = intercept)
-  )
+  )[, model := class(model)[1]]
 }
