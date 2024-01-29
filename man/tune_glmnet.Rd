@@ -8,11 +8,12 @@ tune_glmnet(
   data,
   outcome,
   exposures,
-  alpha,
+  .alpha,
   parallel = TRUE,
   n_folds = 10,
   family = "binomial",
   verbose = TRUE,
+  return_mod = FALSE,
   ...
 )
 }
@@ -23,8 +24,6 @@ tune_glmnet(
 
 \item{exposures}{vector of exposure variable names; if NULL, assumes all non-outcome variables}
 
-\item{alpha}{0 for lasso, 1 for ridge, or a vector of numeric values to try for elastic net}
-
 \item{parallel}{parallelize?}
 
 \item{n_folds}{number of folds for cross-validation}
@@ -33,7 +32,11 @@ tune_glmnet(
 
 \item{verbose}{print additional information}
 
+\item{return_mod}{return the full cv.glmnet object?}
+
 \item{...}{additional arguments passed to cv.glmnet}
+
+\item{alpha}{0 for lasso, 1 for ridge, or a vector of numeric values to try for elastic net}
 }
 \value{
 return a table with hyperparameters and their values

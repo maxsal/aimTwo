@@ -9,6 +9,7 @@ get_bin_diagnostics(
   outcome,
   exposure,
   covs = NULL,
+  beta_mod = "logistf",
   pctile_or = TRUE,
   pl = FALSE
 )
@@ -21,6 +22,8 @@ get_bin_diagnostics(
 \item{exposure}{The name of the exposure column}
 
 \item{covs}{A vector of covariates}
+
+\item{beta_mod}{The type of model to use for beta (default: "logistf")}
 
 \item{pctile_or}{Whether to calculate percentile-based ORs (default: TRUE)}
 

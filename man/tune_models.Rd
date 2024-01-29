@@ -17,7 +17,8 @@ tune_models(
   mtry_seq = NULL,
   node_size_seq = NULL,
   n_trees = 500,
-  verbose = TRUE
+  verbose = TRUE,
+  return_mod = TRUE
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ tune_models(
 \item{n_trees}{number of trees to grow if rf method is selected}
 
 \item{verbose}{print additional information}
+
+\item{return_mod}{return the full model object?}
 }
 \value{
 return a table with hyperparameters and their values

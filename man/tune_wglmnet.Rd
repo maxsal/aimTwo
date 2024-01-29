@@ -11,10 +11,11 @@ tune_wglmnet(
   alpha = 1,
   weight,
   n_folds = 10,
-  parallel = parallel,
+  parallel = FALSE,
   verbose = TRUE,
   method = "dCV",
   family = "binomial",
+  return_mod = FALSE,
   ...
 )
 }
@@ -38,6 +39,8 @@ tune_wglmnet(
 \item{method}{method for replicate weight sampling}
 
 \item{family}{model family (binomial or guassian)}
+
+\item{return_mod}{return the full wglmnet object?}
 
 \item{...}{additional arguments passed to wglmnet}
 }

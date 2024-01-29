@@ -12,7 +12,8 @@ tune_ranger(
   node_size_seq = NULL,
   n_cores = 1,
   n_trees = 500,
-  verbose = TRUE
+  verbose = TRUE,
+  return_mod = FALSE
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ tune_ranger(
 \item{n_trees}{number of trees to grow}
 
 \item{verbose}{print additional information}
+
+\item{return_mod}{return the full ranger object?}
 }
 \value{
 return a table with hyperparameters and their values
