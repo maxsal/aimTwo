@@ -111,18 +111,20 @@ getValues <- function(fitAsso, exposure) {
 #' @param outcome The name of the outcome column
 #' @param exposure The name of the exposure column
 #' @param covs A vector of covariates
+#' @param beta_mod The type of model to use for beta (default: "logistf")
 #' @param pctile_or Whether to calculate percentile-based ORs (default: TRUE)
 #' @param pl Whether to use profile likelihood (default: FALSE)
 #' @importFrom pROC roc
 #' @importFrom ResourceSelection hoslem.test
 #' @importFrom DescTools BrierScore
+#' @importFrom logistf logistf
 #' @return A data table with the following columns:
 #' \itemize{
 #'  \item \code{stat}: The name of the statistic
 #'  \item \code{value}: The value of the statistic
 #' }
 #' @export
-get_bin_diagnostics <- function(data, outcome, exposure, covs = NULL, pctile_or = TRUE, pl = FALSE) {
+get_bin_diagnostics <- function(data, outcome, exposure, covs = NULL, beta_mod = "logistf", pctile_or = TRUE, pl = FALSE) {
     out <- list()
     # formulas
         # without covs
@@ -136,29 +138,61 @@ get_bin_diagnostics <- function(data, outcome, exposure, covs = NULL, pctile_or 
         }
 
     # OR (glm)
-    glm_mod <- glm(f_covs, data = data, family = binomial())
-    out$beta    <- glm_mod$coefficient[exposure]
-    out$se_beta <- sqrt(diag(vcov(glm_mod))[exposure])
-    out$or      <- exp(out$beta)
-    glm_mod_confint <- suppressMessages(confint(glm_mod))
-    out$or_lower <- exp(glm_mod_confint[exposure, 1])
-    out$or_upper <- exp(glm_mod_confint[exposure, 2])
-    out$or_print <- paste0(
-        format(round(out$or, 2), nsmall = 2),
-        " (",
-        format(round(out$or_lower, 2), nsmall = 2),
-        ", ",
-        format(round(out$or_upper, 2), nsmall = 2),
-        ")"
-    )
-    out$log10p <- tryCatch(
-        {
-            -log10(summary(glm_mod)$coefficients[exposure, 4])
-        },
-        error = function(e) {
-            NA
-        }
-    )
+    if (beta_mod == "glm") {
+        glm_mod <- glm(f_covs, data = data, family = binomial())
+        out$beta    <- glm_mod$coefficient[exposure]
+        out$se_beta <- sqrt(diag(vcov(glm_mod))[exposure])
+        out$or      <- exp(out$beta)
+        glm_mod_confint <- suppressMessages(confint(glm_mod))
+        out$or_lower <- exp(glm_mod_confint[exposure, 1])
+        out$or_upper <- exp(glm_mod_confint[exposure, 2])
+        out$or_print <- paste0(
+            format(round(out$or, 2), nsmall = 2),
+            " (",
+            format(round(out$or_lower, 2), nsmall = 2),
+            ", ",
+            format(round(out$or_upper, 2), nsmall = 2),
+            ")"
+        )
+        out$log10p <- tryCatch(
+            {
+                -log10(summary(glm_mod)$coefficients[exposure, 4])
+            },
+            error = function(e) {
+                NA
+            }
+        )
+    }
+
+    # OR (logistf)
+    if (beta_mod == "logistf") {
+        logistf_mod <- logistf::logistf(f_covs, data = data)
+        out$beta <- logistf_mod$coefficients[[exposure]]
+        out$se_beta <- sqrt(diag(vcov(logistf_mod)))[[exposure]]
+        out$or <- exp(out$beta)
+        logistf_logistf_mod_confint <- suppressMessages({
+            confint(logistf_mod)
+        })
+        out$or_lower <- exp(logistf_logistf_mod_confint[exposure, 1])
+        out$or_upper <- exp(logistf_logistf_mod_confint[exposure, 2])
+        out$or_print <- paste0(
+            format(round(out$or, 2), nsmall = 2),
+            " (",
+            format(round(out$or_lower, 2), nsmall = 2),
+            ", ",
+            format(round(out$or_upper, 2), nsmall = 2),
+            ")"
+        )
+        out$log10p <- tryCatch(
+            {
+                -log10(logistf_mod$prob[[exposure]])
+            },
+            error = function(e) {
+                NA
+            }
+        )
+    }
+
 
     # AUC (pROC::roc)
     tmp_auc <- suppressMessages(pROC::roc(
