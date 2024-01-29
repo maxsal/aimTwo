@@ -103,9 +103,11 @@ betas_from_mod <- function(model, intercept = FALSE) {
   } else {
     stop("only glm and logistf models supported")
   }
-  switch(
+  out <- switch(
     model_class,
     glm = betas_from_glm(model, intercept = intercept),
     logistf = betas_from_logistf(model, intercept = intercept)
-  )[, model := class(model)[1]]
+  )
+  out[["model"]] <- class(model)[1]
+  return(out)
 }
