@@ -28,6 +28,47 @@ getTopEffects <- function(prob, data, outcome = "case", exposure, covs = NULL, p
     aimTwo::getValues(fitAsso2, riskBin)
 }
 
+#' Helper: get top% to middle% effects
+#' @param prob A probability representing a percentile
+#' @param middle A vector of two probabilities representing a percentile range
+#' @param data A data frame
+#' @param outcome The name of the outcome column
+#' @param exposure The name of the exposure column
+#' @param covs A vector of covariates
+#' @param pl Whether to use profile likelihood (default: FALSE)
+#' @importFrom logistf logistf logistpl.control
+#' @export
+getTopMidEffects <- function(prob = 0.1, middle = c(0.3, 0.7), data, outcome = "case", exposure, covs = NULL, pl = FALSE) {
+
+    riskBin              <- paste0("Top", prob, "_Mid", middle[2] - middle[1])
+
+    data[[riskBin]] <- fcase(
+        data[[exposure]] >= quantile(data[data[[outcome]] == 0, ][[exposure]], probs = 1 - prob), 1,
+        data[[exposure]] >= quantile(data[data[[outcome]] == 0, ][[exposure]], probs = middle[1])  &
+            data[[exposure]] <= quantile(data[data[[outcome]] == 0, ][[exposure]], probs = middle[2]), 0,
+        default = NA
+    )
+
+    if (!is.null(covs)) {
+        tmp_f <- paste0(outcome, " ~ ", riskBin, " + ", paste(covs, collapse = " + "))
+    } else {
+        tmp_f <- paste0(outcome, " ~ ", riskBin)
+    }
+
+    vars <- c(outcome, riskBin)
+    tmp_data <- na.omit(subset(data, select = vars))
+
+    if (!is.null(covs)) {
+        vars <- c(outcome, riskBin, covs)
+    } else {
+        vars <- c(outcome, riskBin)
+    }
+
+    fitAsso2 <- logistf::logistf(tmp_f, data = tmp_data, plcontrol = logistf::logistpl.control(maxit = 1E5), pl = pl)
+    aimTwo::getValues(fitAsso2, riskBin)
+
+}
+
 #' Helper: get top power
 #' @param prob A probability representing a percentile
 #' @param data A data frame
@@ -240,6 +281,7 @@ get_bin_diagnostics <- function(data, outcome, exposure, covs = NULL, beta_mod =
 
     # %ile-based OR
     if (pctile_or) {
+        out <- c(out, aimTwo::getTopMidEffects(prob = 0.1, middle = c(0.3, 0.7), data = data, outcome = outcome, exposure = exposure, covs = covs, pl = pl))
         probs <- c(0.01, 0.02, 0.05, 0.1, 0.25)
         for (pr in probs) {
             out <- c(out, aimTwo::getTopEffects(prob = pr, data = data, outcome = outcome, exposure = exposure, covs = covs, pl = pl))
