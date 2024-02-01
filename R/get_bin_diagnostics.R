@@ -126,6 +126,10 @@ getValues <- function(fitAsso, exposure) {
 #' @export
 get_bin_diagnostics <- function(data, outcome, exposure, covs = NULL, beta_mod = "logistf", pctile_or = TRUE, pl = FALSE) {
     out <- list()
+    if (!data.table::is.data.table(data)) {
+        data <- data.table::as.data.table(data)
+    }
+    data <- data[!is.na(data[[outcome]]) & !is.na(data[[exposure]]), ]
     # formulas
         # without covs
         f_nocovs <- as.formula(paste0(outcome, " ~ ", exposure))
