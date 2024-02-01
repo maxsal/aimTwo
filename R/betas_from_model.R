@@ -127,6 +127,11 @@ betas_from_mod <- function(model, intercept = FALSE) {
 sum_beta_weights <- function(data_table, beta_table, expit_out = TRUE, simplify = TRUE) {
     pred_cols <- beta_table[["predictor"]]
     pred_cols <- pred_cols[!(pred_cols %in% c("Intercept", "(Intercept)"))]
+    not_in_data <- pred_cols[!(pred_cols %in% colnames(data_table))]
+    if (length(not_in_data) > 0) {
+        message(paste0("The following predictors are not in the data: ", paste(not_in_data, collapse = ", ")))
+    }
+    pred_cols <- pred_cols[!(pred_cols %in% not_in_data)]
     data_out <- data.table::copy(data.table::as.data.table(data_table))
 
     if ("(Intercept)" %in% beta_table[["predictor"]]) {
