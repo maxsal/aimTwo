@@ -98,7 +98,7 @@ tune_glmnet <- function(
 }
 
 
-#' Tune mtry and min.node.size parameters for random forest via ranger
+#' Tune mtry and min.node.size parameters for binary classification outcome random forest via ranger
 #' @param data dataset
 #' @param outcome name of outcome variable
 #' @param exposures vector of exposure variable names; if NULL, assumes all non-outcome variables
@@ -152,6 +152,7 @@ tune_ranger <- function(
   if (is.null(exposures)) exposures <- names(data)[names(data) != outcome]
   f <- formula(paste0(outcome, " ~ ", paste0(exposures, collapse = " + ")))
   vars <- c(outcome, exposures)
+  if (!is.factor(data[[outcome]])) data[[outcome]] <- as.factor(data[[outcome]])
 
   cli::cli_progress_bar(name = "grid search...", total = nrow(rf))
   for (i in 1:nrow(rf)) {
@@ -191,7 +192,8 @@ tune_ranger <- function(
       min.node.size   = out$param[out$param$parameter == "rf.node_size", ][["value"]],
       num.threads     = n_cores,
       write.forest = TRUE,
-      importance = "permutation"
+      importance = "permutation",
+      probability = TRUE
     )
     out$mod <- model
   }
