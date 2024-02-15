@@ -155,6 +155,7 @@ getValues <- function(fitAsso, exposure) {
 #' @param beta_mod The type of model to use for beta (default: "logistf")
 #' @param pctile_or Whether to calculate percentile-based ORs (default: TRUE)
 #' @param pl Whether to use profile likelihood (default: FALSE)
+#' @param middle A vector of two probabilities representing a percentile range (default: c(0.4, 0.6)) for `getTopMidEffects` OR
 #' @importFrom pROC roc
 #' @importFrom ResourceSelection hoslem.test
 #' @importFrom DescTools BrierScore
@@ -165,7 +166,7 @@ getValues <- function(fitAsso, exposure) {
 #'  \item \code{value}: The value of the statistic
 #' }
 #' @export
-get_bin_diagnostics <- function(data, outcome, exposure, covs = NULL, beta_mod = "logistf", pctile_or = TRUE, pl = FALSE) {
+get_bin_diagnostics <- function(data, outcome, exposure, covs = NULL, beta_mod = "logistf", pctile_or = TRUE, pl = FALSE, middle = c(0.4, 0.6)) {
     out <- list()
     if (!data.table::is.data.table(data)) {
         data <- data.table::as.data.table(data)
@@ -281,7 +282,7 @@ get_bin_diagnostics <- function(data, outcome, exposure, covs = NULL, beta_mod =
 
     # %ile-based OR
     if (pctile_or) {
-        out <- c(out, aimTwo::getTopMidEffects(prob = 0.1, middle = c(0.3, 0.7), data = data, outcome = outcome, exposure = exposure, covs = covs, pl = pl))
+        out <- c(out, aimTwo::getTopMidEffects(prob = 0.1, middle = middle, data = data, outcome = outcome, exposure = exposure, covs = covs, pl = pl))
         probs <- c(0.01, 0.02, 0.05, 0.1, 0.25)
         for (pr in probs) {
             out <- c(out, aimTwo::getTopEffects(prob = pr, data = data, outcome = outcome, exposure = exposure, covs = covs, pl = pl))
