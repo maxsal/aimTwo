@@ -38,7 +38,7 @@ getTopEffects <- function(prob, data, outcome = "case", exposure, covs = NULL, p
 #' @param pl Whether to use profile likelihood (default: FALSE)
 #' @importFrom logistf logistf logistpl.control
 #' @export
-getTopMidEffects <- function(prob = 0.1, middle = c(0.3, 0.7), data, outcome = "case", exposure, covs = NULL, pl = FALSE) {
+getTopMidEffects <- function(prob = 0.1, middle = c(0.4, 0.6), data, outcome = "case", exposure, covs = NULL, pl = FALSE) {
 
     riskBin              <- paste0("Top", prob, "_Mid", middle[2] - middle[1])
 
