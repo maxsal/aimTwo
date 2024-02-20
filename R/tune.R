@@ -174,10 +174,10 @@ tune_ranger <- function(
       "parameter" = c("rf.mtry", "rf.node_size"),
       "value" = c(
         rf |>
-          dplyr::filter(oob_rmse == min(oob_rmse, na.rm = TRUE)) |>
+          dplyr::slice(which.min(oob_rmse)) |>
           dplyr::pull(mtry),
         rf |>
-          dplyr::filter(oob_rmse == min(oob_rmse, na.rm = TRUE)) |>
+          dplyr::slice(which.min(oob_rmse)) |>
           dplyr::pull(node_size)
       )
     )
