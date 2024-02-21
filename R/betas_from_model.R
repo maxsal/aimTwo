@@ -86,6 +86,7 @@ betas_from_logistf <- function(logistf_model, intercept = FALSE) {
 #' @param intercept Whether to include the intercept in the output
 #' @param lambda The lambda value to use for the beta coefficients (default is "lambda.min")
 #' @importFrom data.table data.table
+#' @importFrom dplyr filter
 #' @return A data.table with the following columns:
 #' \itemize{
 #'  \item \code{predictor}: The name of the predictor
@@ -101,7 +102,10 @@ betas_from_cv.glmnet <- function(cv.glmnet_model, intercept = FALSE, lambda = "l
         beta = x[, 1]
       )
     })()
-  if (intercept == FALSE) out <- out[!(predictor %in% c("Intercept", "(Intercept)")), ]
+  if (intercept == FALSE) {
+    out <- out |>
+      dplyr::filter(!(predictor %in% c("Intercept", "(Intercept)")))
+  }
   return(out)
 }
 
