@@ -81,6 +81,30 @@ betas_from_logistf <- function(logistf_model, intercept = FALSE) {
 }
 
 
+#' Extract beta coefficients from fitted cv.glmnet models
+#' @param cv.glmnet_model A fitted cv.glmnet model object
+#' @param intercept Whether to include the intercept in the output
+#' @param lambda The lambda value to use for the beta coefficients (default is "lambda.min")
+#' @importFrom data.table data.table
+#' @return A data.table with the following columns:
+#' \itemize{
+#'  \item \code{predictor}: The name of the predictor
+#' \item \code{beta}: The beta coefficient
+#' }
+#' @export
+betas_from_cv.glmnet <- function(cv.glmnet_model, intercept = FALSE, lambda = "lambda.min") {
+  out <- predict(cv.glmnet_model, type = "coef", s = lambda) |>
+    as.matrix() |>
+    (\(x) {
+      data.table::data.table(
+        predictor = rownames(x),
+        beta = x[, 1]
+      )
+    })()
+  if (intercept == FALSE) out <- out[!(predictor %in% c("Intercept", "(Intercept)")), ]
+  return(out)
+}
+
 #' Extract model information from glm or logistf models
 #' @param model A fitted (svy)glm or logistf model object
 #' @return A data.table with the following columns:
@@ -94,19 +118,22 @@ betas_from_logistf <- function(logistf_model, intercept = FALSE) {
 #' \item \code{or_upper}: The upper bound of the odds ratio
 #' }
 #' @export
-betas_from_mod <- function(model, intercept = FALSE) {
+betas_from_mod <- function(model, intercept = FALSE, lambda = "lambda.min") {
   model_class <- class(model)
   if ("glm" %in% model_class) {
     model_class <- "glm"
   } else if ("logistf" %in% model_class) {
     model_class <- "logistf"
+  } else if ("cv.glmnet" %in% model_class) {
+    model_class <- "cv.glmnet"
   } else {
-    stop("only glm and logistf models supported")
+    stop("only glm, logistf, and cv.glmnet models supported")
   }
   out <- switch(
     model_class,
-    glm = betas_from_glm(model, intercept = intercept),
-    logistf = betas_from_logistf(model, intercept = intercept)
+    glm     = betas_from_glm(model, intercept = intercept),
+    logistf = betas_from_logistf(model, intercept = intercept),
+    cv.glmnet = betas_from_cv.glmnet(model, intercept = intercept, lambda = lambda)
   )
   out[["model"]] <- class(model)[1]
   return(out)
