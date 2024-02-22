@@ -109,6 +109,38 @@ betas_from_cv.glmnet <- function(cv.glmnet_model, intercept = FALSE, lambda = "l
   return(out)
 }
 
+#' Extract beta coefficients from fitted glmnet models
+#' @param glmnet_model A fitted glmnet model object
+#' @param intercept Whether to include the intercept in the output
+#' @importFrom data.table data.table
+#' @importFrom dplyr filter bind_rows
+#' @return A data.table with the following columns:
+#' \itemize{
+#'  \item \code{predictor}: The name of the predictor
+#' \item \code{beta}: The beta coefficient
+#' }
+#' @export
+betas_from_glmnet <- function(glmnet_model, intercept = FALSE) {
+  out <- glmnet_model$beta |>
+    as.matrix() |>
+    (\(x) {
+      data.table::data.table(
+        predictor = rownames(x),
+        beta = x[, 1]
+      )
+    })()
+  if (intercept == TRUE) {
+    out <- dplyr::bind_rows(
+      out,
+      data.table::data.table(
+        predictor = "(Intercept)",
+        beta = glmnet_model$a0[[1]]
+      )
+    )
+  }
+  return(out)
+}
+
 #' Extract model information from glm or logistf models
 #' @param model A fitted (svy)glm or logistf model object
 #' @return A data.table with the following columns:
@@ -130,6 +162,8 @@ betas_from_mod <- function(model, intercept = FALSE, lambda = "lambda.min") {
     model_class <- "logistf"
   } else if ("cv.glmnet" %in% model_class) {
     model_class <- "cv.glmnet"
+  } else if ("glmnet" %in% model_class) {
+    model_class <- "glmnet"
   } else {
     stop("only glm, logistf, and cv.glmnet models supported")
   }
@@ -138,6 +172,7 @@ betas_from_mod <- function(model, intercept = FALSE, lambda = "lambda.min") {
     glm     = betas_from_glm(model, intercept = intercept),
     logistf = betas_from_logistf(model, intercept = intercept),
     cv.glmnet = betas_from_cv.glmnet(model, intercept = intercept, lambda = lambda)
+    glmnet = betas_from_glmnet(model, intercept = intercept)
   )
   out[["model"]] <- class(model)[1]
   return(out)
