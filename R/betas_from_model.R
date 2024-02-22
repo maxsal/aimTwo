@@ -171,7 +171,7 @@ betas_from_mod <- function(model, intercept = FALSE, lambda = "lambda.min") {
     model_class,
     glm     = betas_from_glm(model, intercept = intercept),
     logistf = betas_from_logistf(model, intercept = intercept),
-    cv.glmnet = betas_from_cv.glmnet(model, intercept = intercept, lambda = lambda)
+    cv.glmnet = betas_from_cv.glmnet(model, intercept = intercept, lambda = lambda),
     glmnet = betas_from_glmnet(model, intercept = intercept)
   )
   out[["model"]] <- class(model)[1]
