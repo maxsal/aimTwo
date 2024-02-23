@@ -183,42 +183,80 @@ betas_from_mod <- function(model, intercept = FALSE, lambda = "lambda.min") {
 #' @param beta_table A data.table with the beta coefficients
 #' @param expit_out Whether to also return the predicted values on the probability scale
 #' @param simplify Whether to return only predicted values (TRUE) or the full data.table with predicted values (FALSE)
-#' @importFrom data.table data.table copy set
+#' @importFrom data.table data.table copy set as.data.table is.data.table
+#' @importFrom cli cli_alert_warning
 #' @return A data.table with the following columns:
 #' \itemize{
 #'  \item \code{pred}: The predicted value
 #' \item \code{pred_expit}: The predicted value on the logit scale
 #' }
 #' @export
-sum_beta_weights <- function(data_table, beta_table, expit_out = TRUE, simplify = TRUE) {
-    pred_cols <- beta_table[["predictor"]]
-    pred_cols <- pred_cols[!(pred_cols %in% c("Intercept", "(Intercept)"))]
-    not_in_data <- pred_cols[!(pred_cols %in% colnames(data_table))]
-    if (length(not_in_data) > 0) {
-        message(paste0("The following predictors are not in the data: ", paste(not_in_data, collapse = ", ")))
-    }
-    pred_cols <- pred_cols[!(pred_cols %in% not_in_data)]
-    data_out <- data.table::copy(data.table::as.data.table(data_table))
 
-    if ("(Intercept)" %in% beta_table[["predictor"]]) {
-        data_out[["pred"]] <- beta_table[beta_table[["predictor"]] == "(Intercept)", ][["beta"]]
-    } else {
-        data_out[["pred"]] <- 0
-    }
+sum_beta_weights <- function(data_table, beta_table, expit_out = TRUE, simplify = TRUE, verbose = TRUE) {
+  if (!data.table::is.data.table(beta_table)) {
+    beta_table <- data.table::as.data.table(beta_table)
+  }
+  pred_cols <- beta_table[["predictor"]]
+  pred_cols <- pred_cols[!(pred_cols %in% c("Intercept", "(Intercept)"))]
+  not_in_data <- pred_cols[!(pred_cols %in% colnames(data_table))]
 
-    for (i in pred_cols) {
-        data.table::set(
-            data_out,
-            j = "pred",
-            value = data_out[["pred"]] + (beta_table[beta_table[["predictor"]] == i, ][["beta"]] * data_out[[i]])
-        )
-    }
-    if (simplify) {
-        data_out <- data_out |> dplyr::select(id, pred)
-    }
-    if ("(Intercept)" %in% beta_table[["predictor"]] & expit_out == TRUE) {
-        expit <- function(x) 1 / (1 + exp(-x))
-        data_out <- data_out |> dplyr::mutate(pred_expit = expit(pred))
-    }
-    data_out
+  if (length(not_in_data) > 0) {
+    if (verbose) cli::cli_alert_warning("The following {length(not_in_data)} predictor{?s} {?is/are} not in the data: {not_in_data}")
+  }
+
+  pred_cols <- pred_cols[!(pred_cols %in% not_in_data)]
+  data_out <- data.table::copy(data.table::as.data.table(data_table))
+
+  betas <- beta_table[beta_table[["predictor"]] %in% c(pred_cols), ][["beta"]]
+  names(betas) <- beta_table[beta_table[["predictor"]] %in% c(pred_cols), ][["predictor"]]
+  intercept <- ifelse("(Intercept)" %in% beta_table[["predictor"]], beta_table[beta_table[["predictor"]] == "(Intercept)", ][["beta"]], 0)
+
+  data_matrix <- as.matrix(data_out[, pred_cols, with = FALSE])
+  pred_values <- data_matrix %*% betas[pred_cols]
+  data_out[["pred"]] <- intercept + c(pred_values)
+
+  if (simplify) {
+    data_out <- data_out[, .(id, pred)]
+  }
+
+  if ("(Intercept)" %in% beta_table[["predictor"]] && expit_out) {
+    expit <- function(x) 1 / (1 + exp(-x))
+    data_out[, pred_expit := expit(pred)]
+  }
+
+  return(data_out[])
 }
+
+### OLD VERSION
+# sum_beta_weights <- function(data_table, beta_table, expit_out = TRUE, simplify = TRUE) {
+#     pred_cols <- beta_table[["predictor"]]
+#     pred_cols <- pred_cols[!(pred_cols %in% c("Intercept", "(Intercept)"))]
+#     not_in_data <- pred_cols[!(pred_cols %in% colnames(data_table))]
+#     if (length(not_in_data) > 0) {
+#         message(paste0("The following predictors are not in the data: ", paste(not_in_data, collapse = ", ")))
+#     }
+#     pred_cols <- pred_cols[!(pred_cols %in% not_in_data)]
+#     data_out <- data.table::copy(data.table::as.data.table(data_table))
+
+#     if ("(Intercept)" %in% beta_table[["predictor"]]) {
+#         data_out[["pred"]] <- beta_table[beta_table[["predictor"]] == "(Intercept)", ][["beta"]]
+#     } else {
+#         data_out[["pred"]] <- 0
+#     }
+
+#     for (i in pred_cols) {
+#         data.table::set(
+#             data_out,
+#             j = "pred",
+#             value = data_out[["pred"]] + (beta_table[beta_table[["predictor"]] == i, ][["beta"]] * data_out[[i]])
+#         )
+#     }
+#     if (simplify) {
+#         data_out <- data_out |> dplyr::select(id, pred)
+#     }
+#     if ("(Intercept)" %in% beta_table[["predictor"]] & expit_out == TRUE) {
+#         expit <- function(x) 1 / (1 + exp(-x))
+#         data_out <- data_out |> dplyr::mutate(pred_expit = expit(pred))
+#     }
+#     data_out
+# }
