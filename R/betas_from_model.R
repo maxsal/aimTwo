@@ -222,7 +222,7 @@ sum_beta_weights <- function(data_table, beta_table, expit_out = TRUE, simplify 
 
   if ("(Intercept)" %in% beta_table[["predictor"]] && expit_out) {
     expit <- function(x) 1 / (1 + exp(-x))
-    data_out[, pred_expit := expit(pred)]
+    data_out <- data_out |> dplyr::mutate(pred_expit = expit(pred))
   }
 
   return(data_out[])
