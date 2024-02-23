@@ -185,6 +185,7 @@ betas_from_mod <- function(model, intercept = FALSE, lambda = "lambda.min") {
 #' @param simplify Whether to return only predicted values (TRUE) or the full data.table with predicted values (FALSE)
 #' @importFrom data.table data.table copy set as.data.table is.data.table
 #' @importFrom cli cli_alert_warning
+#' @importFrom dplyr select
 #' @return A data.table with the following columns:
 #' \itemize{
 #'  \item \code{pred}: The predicted value
@@ -216,7 +217,7 @@ sum_beta_weights <- function(data_table, beta_table, expit_out = TRUE, simplify 
   data_out[["pred"]] <- intercept + c(pred_values)
 
   if (simplify) {
-    data_out <- data_out[, .(id, pred)]
+    data_out <- data_out |> dplyr::select(id, pred)
   }
 
   if ("(Intercept)" %in% beta_table[["predictor"]] && expit_out) {
